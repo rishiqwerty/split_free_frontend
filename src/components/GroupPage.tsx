@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import './GroupPage.css'
 
@@ -43,7 +44,9 @@ interface Balance {
 }
 
 const GroupPage: React.FC = () => {
-  const [expenses, setExpenses] = useState<{ [key: string]: Expense }>({})
+  const { groupId } = useParams<{ groupId: string }>()
+  const navigate = useNavigate()
+  const [expenses, setExpenses] = useState<{ [key: number]: Expense }>({})
   const [balances, setBalances] = useState<Balance[]>([])
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -54,7 +57,7 @@ const GroupPage: React.FC = () => {
     group: 1,
     paid_by_id: 1,
     split_between: [] as number[],
-    splits: [] as Split[],
+    splits: {} as { [key: number]: string },
     notes: '',
     date: new Date().toISOString().split('T')[0]
   })
@@ -62,40 +65,44 @@ const GroupPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'expenses' | 'balances'>('expenses')
 
   useEffect(() => {
-    fetchExpenses()
-    fetchGroupMembers()
-  }, [])
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        console.log('rgtrgurgrug',token)
+        const headers = {
+          'Authorization': `Token ${token}`,
+        };
 
-  const fetchGroupMembers = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/v1/groups/1/', {
-        headers: {
-          'Authorization': 'Token d8be9494aeb7180bb06592b068eb8a29cd9a0154'
-        }
-      })
-      // The response is an object with a "0" key containing the group data
-      const groupData = response.data["0"]
-      setGroupMembers(groupData.members)
-    } catch (error) {
-      console.error('Error fetching group members:', error)
-      setError('Failed to fetch group members')
-    }
-  }
+        const [membersResponse, expensesResponse] = await Promise.all([
+          axios.get(`http://127.0.0.1:8000/api/v1/groups/${groupId}/`, { 
+            headers,
+            withCredentials: true 
+          }),
+          axios.get(`http://127.0.0.1:8000/api/v1/expenses/expenses/${groupId}/`, { 
+            headers,
+            withCredentials: true 
+          })
+        ])
 
-  const fetchExpenses = async () => {
-    try {
-      const response = await axios.get('http://127.0.0.1:8000/api/v1/expenses/expenses/1/', {
-        headers: {
-          // 'Authorization': `Token ${localStorage.getItem('token')}`
-          'Authorization': 'Token d8be9494aeb7180bb06592b068eb8a29cd9a0154'
+        if (membersResponse.status === 401 || expensesResponse.status === 401) {
+          navigate('/')
+          return
         }
-      })
-      setExpenses(response.data)
-    } catch (error) {
-      console.error('Error fetching expenses:', error)
-      setError('Failed to fetch expenses')
+
+        setGroupMembers(membersResponse.data["0"].members)
+        const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
+          acc[expense.id] = expense
+          return acc
+        }, {})
+        setExpenses(expensesMap)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setError('Failed to load data. Please try again later.')
+      }
     }
-  }
+
+    fetchData()
+  }, [groupId, navigate])
 
   const handleAmountChange = (amount: string) => {
     setNewExpense(prev => {
@@ -108,7 +115,7 @@ const GroupPage: React.FC = () => {
           user: userId,
           amount: equalAmount
         }))
-        return { ...newExpense, splits: newSplits }
+        return { ...newExpense, splits: newSplits.reduce((acc, split) => ({ ...acc, [split.user]: split.amount }), {}) }
       }
       
       return newExpense
@@ -117,19 +124,14 @@ const GroupPage: React.FC = () => {
 
   const handleSplitChange = (userId: number, amount: string) => {
     setNewExpense(prev => {
-      const newSplits = [...prev.splits]
+      const newSplits = { ...prev.splits }
       const totalAmount = parseFloat(prev.amount)
       
       // Update the changed user's amount
-      const existingSplitIndex = newSplits.findIndex(split => split.user === userId)
-      if (existingSplitIndex >= 0) {
-        if (amount === '') {
-          newSplits.splice(existingSplitIndex, 1)
-        } else {
-          newSplits[existingSplitIndex] = { user: userId, amount }
-        }
-      } else if (amount !== '') {
-        newSplits.push({ user: userId, amount })
+      if (amount === '') {
+        delete newSplits[userId]
+      } else {
+        newSplits[userId] = amount
       }
 
       // Calculate remaining amount and users
@@ -141,12 +143,7 @@ const GroupPage: React.FC = () => {
       if (otherUsers.length > 0) {
         const equalAmount = (remainingAmount / otherUsers.length).toFixed(2)
         otherUsers.forEach(otherUserId => {
-          const otherIndex = newSplits.findIndex(split => split.user === otherUserId)
-          if (otherIndex >= 0) {
-            newSplits[otherIndex] = { user: otherUserId, amount: equalAmount }
-          } else {
-            newSplits.push({ user: otherUserId, amount: equalAmount })
-          }
+          newSplits[otherUserId] = equalAmount
         })
       }
 
@@ -156,7 +153,7 @@ const GroupPage: React.FC = () => {
 
   const validateSplits = () => {
     const totalAmount = parseFloat(newExpense.amount)
-    const totalSplitAmount = newExpense.splits.reduce((sum, split) => sum + parseFloat(split.amount), 0)
+    const totalSplitAmount = Object.values(newExpense.splits).reduce((sum, amount) => sum + parseFloat(amount), 0)
     
     if (totalSplitAmount > totalAmount) {
       setError('Total split amount cannot exceed the expense amount')
@@ -180,36 +177,61 @@ const GroupPage: React.FC = () => {
     }
 
     try {
+      const token = localStorage.getItem('authToken');
+      const headers = {
+        'Authorization': `Token ${token}`,
+      };
+
       // Convert splits_detail format to splits format for API
-      const splits = newExpense.splits.map(split => ({
-        amount: split.amount,
-        user: split.user
+      const splits = Object.entries(newExpense.splits).map(([userId, amount]) => ({
+        amount: amount,
+        user: parseInt(userId)
       }))
 
-      await axios.post('http://127.0.0.1:8000/api/v1/expenses/expenses/', {
+      const response = await axios.post(`http://127.0.0.1:8000/api/v1/expenses/expenses/`, {
         ...newExpense,
         amount: parseFloat(newExpense.amount),
         splits: splits
-      }, {
-        headers: {
-          'Authorization': 'Token d8be9494aeb7180bb06592b068eb8a29cd9a0154'
-        }
+      }, { 
+        headers,
+        withCredentials: true 
       })
-      fetchExpenses()
+      setExpenses(prev => ({ ...prev, [response.data.id]: response.data }))
       setIsModalOpen(false)
       setNewExpense({
         title: '',
         amount: '',
         group: 1,
         paid_by_id: 1,
-        split_between: [],
-        splits: [],
+        split_between: [] as number[],
+        splits: {} as { [key: number]: string },
         notes: '',
         date: new Date().toISOString().split('T')[0]
       })
     } catch (error) {
       console.error('Error creating expense:', error)
       setError('Failed to create expense')
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers = {
+        'Authorization': `Token ${token}`,
+      };
+
+      const response = await fetch('http://127.0.0.1:8000/api/auth/logout/', {
+        method: 'POST',
+        headers,
+        credentials: 'include'
+      })
+      if (response.ok) {
+        localStorage.removeItem('authToken');
+        navigate('/')
+      }
+    } catch (error) {
+      console.error('Logout failed:', error)
     }
   }
 
@@ -228,6 +250,9 @@ const GroupPage: React.FC = () => {
         <div className="header-bottom">
           <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
             Add Expense
+          </button>
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
           </button>
         </div>
       </div>
@@ -378,7 +403,7 @@ const GroupPage: React.FC = () => {
                                 setNewExpense({ 
                                   ...newExpense, 
                                   split_between: newSplitBetween,
-                                  splits: newSplits
+                                  splits: newSplits.reduce((acc, split) => ({ ...acc, [split.user]: split.amount }), {})
                                 });
                               }}
                             />
@@ -389,7 +414,7 @@ const GroupPage: React.FC = () => {
                               <span className="currency">₹</span>
                               <input
                                 type="number"
-                                value={newExpense.splits.find(split => split.user === member.id)?.amount || ''}
+                                value={newExpense.splits[member.id] || ''}
                                 onChange={(e) => handleSplitChange(member.id, e.target.value)}
                                 placeholder="Amount"
                               />
@@ -461,10 +486,10 @@ const GroupPage: React.FC = () => {
                       const equalAmount = (parseFloat(selectedExpense.amount) / selectedExpense.split_between.length).toFixed(2);
                       const member = groupMembers.find(member => member.id === userId);
                       return (
-                        <div key={index} className="split-item">
-                          <span>{member ? member.username : `User ${userId}`}</span>
-                          <span>₹{equalAmount}</span>
-                        </div>
+                          <div key={index} className="split-item">
+                            <span>{member ? member.username : `User ${userId}`}</span>
+                            <span>₹{equalAmount}</span>
+                          </div>
                       );
                     })
                   )}
