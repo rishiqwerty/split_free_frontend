@@ -12,21 +12,35 @@ const App: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          navigate('/login');
+          setIsLoading(false);
+          return;
+        }
+
         const response = await fetch(`${API_URL}/api/auth/check/`, {
           credentials: 'include',
+          headers: {
+            'Authorization': `Token ${token}`,
+          },
         });
+        
         if (!response.ok) {
+          localStorage.removeItem('authToken');
           navigate('/login');
         }
       } catch (error) {
         console.error('Auth check failed:', error);
+        localStorage.removeItem('authToken');
+        navigate('/login');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   if (isLoading) {
     return <div className="loading">Loading...</div>;
