@@ -26,7 +26,7 @@ const App: React.FC = () => {
     };
 
     checkAuth();
-  }, []);
+  }, [navigate]);
 
   if (isLoading) {
     return <div className="loading">Loading...</div>;

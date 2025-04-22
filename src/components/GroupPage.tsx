@@ -50,7 +50,6 @@ const GroupPage: React.FC = () => {
   const [expenses, setExpenses] = useState<{ [key: number]: Expense }>({})
   const [balances] = useState<Balance[]>([])
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
-  const [groupName, setGroupName] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
   const [newExpense, setNewExpense] = useState({
@@ -91,7 +90,6 @@ const GroupPage: React.FC = () => {
           return
         }
 
-        setGroupName(membersResponse.data["0"].name)
         setGroupMembers(membersResponse.data["0"].members)
         const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
           acc[expense.id] = expense
@@ -247,9 +245,7 @@ const GroupPage: React.FC = () => {
             <h1 className="brand-name">SplitFree</h1>
             <p className="brand-tagline">Split expenses, stay free</p>
           </div>
-          <h2 className="group-subheader">
-            Group: <span className="group-name">{groupName}</span>
-          </h2>
+          <h2 className="group-subheader">Group Expenses</h2>
         </div>
         <div className="header-bottom">
           <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
