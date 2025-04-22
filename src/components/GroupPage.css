@@ -555,11 +555,15 @@
 }
 
 .group-subheader {
-  font-size: 16px;
-  color: var(--text-primary);
+  font-size: 1.2rem;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.group-subheader .group-name {
+  color: var(--accent-color);
   font-weight: 600;
-  margin-top: 4px;
-  opacity: 0.9;
+  font-size: 1.1rem;
 }
 
 .header-actions {

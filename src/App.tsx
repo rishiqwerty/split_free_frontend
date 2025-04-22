@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import GroupPage from './components/GroupPage';
 import Login from './components/Login';
+import { API_URL } from './config';
 import './App.css';
 
 const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/auth/check/', {
+        const response = await fetch(`${API_URL}/api/auth/check/`, {
           credentials: 'include',
         });
-        if (response.ok) {
-          setIsAuthenticated(true);
+        if (!response.ok) {
+          navigate('/login');
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -32,13 +33,11 @@ const App: React.FC = () => {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/group/:groupId" element={<GroupPage />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/group/:groupId" element={<GroupPage />} />
+    </Routes>
   );
 };
 

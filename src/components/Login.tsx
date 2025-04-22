@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase';
+import { API_URL } from '../config';
 import './Login.css';
 
 const Login = () => {
@@ -25,7 +26,7 @@ const Login = () => {
       
       // Send the Firebase ID token to your backend
       const idToken = await user.getIdToken();
-      const response = await fetch('http://127.0.0.1:8000/auth/google-login/', {
+      const response = await fetch(`${API_URL}/auth/google-login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

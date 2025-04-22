@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { API_URL } from '../config'
 import './GroupPage.css'
 
 interface User {
@@ -47,8 +48,9 @@ const GroupPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
   const [expenses, setExpenses] = useState<{ [key: number]: Expense }>({})
-  const [balances, setBalances] = useState<Balance[]>([])
+  const [balances] = useState<Balance[]>([])
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
+  const [groupName, setGroupName] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
   const [newExpense, setNewExpense] = useState({
@@ -74,11 +76,11 @@ const GroupPage: React.FC = () => {
         };
 
         const [membersResponse, expensesResponse] = await Promise.all([
-          axios.get(`http://127.0.0.1:8000/api/v1/groups/${groupId}/`, { 
+          axios.get(`${API_URL}/api/v1/groups/${groupId}/`, { 
             headers,
             withCredentials: true 
           }),
-          axios.get(`http://127.0.0.1:8000/api/v1/expenses/expenses/${groupId}/`, { 
+          axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/`, { 
             headers,
             withCredentials: true 
           })
@@ -89,6 +91,7 @@ const GroupPage: React.FC = () => {
           return
         }
 
+        setGroupName(membersResponse.data["0"].name)
         setGroupMembers(membersResponse.data["0"].members)
         const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
           acc[expense.id] = expense
@@ -182,13 +185,12 @@ const GroupPage: React.FC = () => {
         'Authorization': `Token ${token}`,
       };
 
-      // Convert splits_detail format to splits format for API
       const splits = Object.entries(newExpense.splits).map(([userId, amount]) => ({
         amount: amount,
         user: parseInt(userId)
       }))
 
-      const response = await axios.post(`http://127.0.0.1:8000/api/v1/expenses/expenses/`, {
+      const response = await axios.post(`${API_URL}/api/v1/expenses/expenses/`, {
         ...newExpense,
         amount: parseFloat(newExpense.amount),
         splits: splits
@@ -221,7 +223,7 @@ const GroupPage: React.FC = () => {
         'Authorization': `Token ${token}`,
       };
 
-      const response = await fetch('http://127.0.0.1:8000/api/auth/logout/', {
+      const response = await fetch(`${API_URL}/api/auth/logout/`, {
         method: 'POST',
         headers,
         credentials: 'include'
@@ -245,7 +247,9 @@ const GroupPage: React.FC = () => {
             <h1 className="brand-name">SplitFree</h1>
             <p className="brand-tagline">Split expenses, stay free</p>
           </div>
-          <h2 className="group-subheader">Group Expenses</h2>
+          <h2 className="group-subheader">
+            Group: <span className="group-name">{groupName}</span>
+          </h2>
         </div>
         <div className="header-bottom">
           <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
