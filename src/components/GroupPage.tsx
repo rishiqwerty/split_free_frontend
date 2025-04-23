@@ -50,6 +50,8 @@ const GroupPage: React.FC = () => {
   const [expenses, setExpenses] = useState<{ [key: number]: Expense }>({})
   const [balances] = useState<Balance[]>([])
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
+  const [groupName, setGroupName] = useState<string>('')
+  const [userName, setUserName] = useState<string>('')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null)
   const [newExpense, setNewExpense] = useState({
@@ -69,7 +71,6 @@ const GroupPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        console.log('rgtrgurgrug',token)
         const headers = {
           'Authorization': `Token ${token}`,
         };
@@ -90,7 +91,9 @@ const GroupPage: React.FC = () => {
           return
         }
 
+        setGroupName(membersResponse.data["0"].name)
         setGroupMembers(membersResponse.data["0"].members)
+        setUserName(membersResponse.data["0"].logged_in_user)
         const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
           acc[expense.id] = expense
           return acc
@@ -245,9 +248,15 @@ const GroupPage: React.FC = () => {
             <h1 className="brand-name">SplitFree</h1>
             <p className="brand-tagline">Split expenses, stay free</p>
           </div>
-          <h2 className="group-subheader">Group Expenses</h2>
+          <div className="group-info">
+            <h2 className="group-name">{groupName}</h2>
+            <p className="group-subheader">Group Expenses</p>
+          </div>
         </div>
         <div className="header-bottom">
+          <div className="user-info">
+            <span className="user-name">Welcome, {userName}</span>
+          </div>
           <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
             Add Expense
           </button>

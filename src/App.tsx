@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import GroupPage from './components/GroupPage';
 import Login from './components/Login';
+import HomePage from './components/HomePage';
 import { API_URL } from './config';
 import './App.css';
 
@@ -14,7 +15,9 @@ const App: React.FC = () => {
       try {
         const token = localStorage.getItem('authToken');
         if (!token) {
-          navigate('/login');
+          if (window.location.pathname !== '/login') {
+            navigate('/login');
+          }
           setIsLoading(false);
           return;
         }
@@ -27,13 +30,13 @@ const App: React.FC = () => {
         });
         
         if (!response.ok) {
-          localStorage.removeItem('authToken');
-          navigate('/login');
+          if (window.location.pathname !== '/login' && response.status === 401) {
+            localStorage.removeItem('authToken');
+            navigate('/login');
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
-        localStorage.removeItem('authToken');
-        navigate('/login');
       } finally {
         setIsLoading(false);
       }
@@ -48,8 +51,9 @@ const App: React.FC = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/home" element={<HomePage />} />
       <Route path="/group/:groupId" element={<GroupPage />} />
     </Routes>
   );
