@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import GroupPage from './components/GroupPage';
 import Login from './components/Login';
 import HomePage from './components/HomePage';
-import { API_URL } from './config';
 import './App.css';
 import JoinGroupPopup from './components/JoinGroupPopup';
 
