@@ -35,7 +35,17 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('authToken', data.token);
-        navigate('/group/1');
+        // navigate('/group/1');
+        const pendingGroupJoin = localStorage.getItem('pendingGroupJoin');
+        if (pendingGroupJoin) {
+          localStorage.removeItem('pendingGroupJoin');
+          navigate(`/group/${pendingGroupJoin}/join`);
+        } else {
+          // Get the previous URL from localStorage or default to home
+          const previousUrl = localStorage.getItem('previousUrl') || '/';
+          localStorage.removeItem('previousUrl');
+          navigate(previousUrl);
+        }
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Backend authentication failed:', errorData);

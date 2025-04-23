@@ -129,7 +129,7 @@ const HomePage: React.FC = () => {
   };
 
   const handleShareGroup = (groupId: number, groupUuid: string) => {
-    const groupUrl = `${window.location.origin}/group/${groupUuid}`;
+    const groupUrl = `${window.location.origin}/group/${groupUuid}/join`;
     navigator.clipboard.writeText(groupUrl).then(() => {
       setCopiedGroupId(groupId);
       setTimeout(() => setCopiedGroupId(null), 2000);

@@ -5,6 +5,7 @@ import Login from './components/Login';
 import HomePage from './components/HomePage';
 import { API_URL } from './config';
 import './App.css';
+import JoinGroupPopup from './components/JoinGroupPopup';
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -15,26 +16,27 @@ const App: React.FC = () => {
       try {
         const token = localStorage.getItem('authToken');
         if (!token) {
-          if (window.location.pathname !== '/login') {
+          if (window.location.pathname !== '/login' && !window.location.pathname.includes('/join')) {
+            localStorage.setItem('previousUrl', location.pathname);
             navigate('/login');
           }
           setIsLoading(false);
           return;
         }
 
-        const response = await fetch(`${API_URL}/api/auth/check/`, {
-          credentials: 'include',
-          headers: {
-            'Authorization': `Token ${token}`,
-          },
-        });
+        // const response = await fetch(`${API_URL}/api/auth/check/`, {
+        //   credentials: 'include',
+        //   headers: {
+        //     'Authorization': `Token ${token}`,
+        //   },
+        // });
         
-        if (!response.ok) {
-          if (window.location.pathname !== '/login' && response.status === 401) {
-            localStorage.removeItem('authToken');
-            navigate('/login');
-          }
-        }
+        // if (!response.ok) {
+        //   if (window.location.pathname !== '/login' && response.status === 401) {
+        //     localStorage.removeItem('authToken');
+        //     navigate('/login');
+        //   }
+        // }
       } catch (error) {
         console.error('Auth check failed:', error);
       } finally {
@@ -55,6 +57,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/group/:groupId" element={<GroupPage />} />
+      <Route path="/group/:uuid/join" element={<JoinGroupPopup />} />
     </Routes>
   );
 };
