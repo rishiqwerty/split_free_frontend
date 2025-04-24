@@ -44,6 +44,19 @@ interface Balance {
   owes: { [key: string]: number }
 }
 
+// Overview summary types
+interface SummaryUserDetail { user: { id: number; username: string; email: string }; paid: string; owed: string; }
+interface SimplifiedTransaction { from_user: { id: number; username: string; email: string; first_name: string; }; to_user: { id: number; username: string; email: string; first_name: string; }; amount: string; }
+interface Summary { total_spend: string; users_expense_details: SummaryUserDetail[]; total_balance: string; simplified_transactions: SimplifiedTransaction[]; }
+
+// Activity types
+interface Activity {
+  user: { id: number; username: string; email: string; first_name?: string };
+  name: string;
+  description: string;
+  timestamp: string;
+}
+
 const GroupPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
@@ -65,7 +78,14 @@ const GroupPage: React.FC = () => {
     date: new Date().toISOString().split('T')[0]
   })
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'expenses' | 'balances'>('expenses')
+  const [activeTab, setActiveTab] = useState<'expenses' | 'overview' | 'activity'>('expenses')
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [activitiesError, setActivitiesError] = useState<string | null>(null)
+  const [simplify, setSimplify] = useState<boolean>(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,6 +114,7 @@ const GroupPage: React.FC = () => {
         setGroupName(membersResponse.data["0"].name)
         setGroupMembers(membersResponse.data["0"].members)
         setUserName(membersResponse.data["0"].logged_in_user)
+        setSimplify(membersResponse.data["0"].simplify_debt)
         const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
           acc[expense.id] = expense
           return acc
@@ -107,6 +128,37 @@ const GroupPage: React.FC = () => {
 
     fetchData()
   }, [groupId, navigate])
+
+  // Fetch overview summary when Tab is Overview
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      setSummaryLoading(true)
+      setSummaryError(null)
+      axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/summary/?simplify=${simplify}`, {
+        headers: { 'Authorization': `Token ${localStorage.getItem('authToken')}` },
+        withCredentials: true,
+      })
+      .then(res => setSummary(res.data))
+      .catch(err => setSummaryError(err.response?.data?.detail || 'Failed to load overview'))
+      .finally(() => setSummaryLoading(false))
+    }
+  }, [activeTab, groupId, simplify])
+
+  // Fetch activities when Tab is Activity
+  useEffect(() => {
+    if (activeTab === 'activity') {
+      setActivitiesLoading(true)
+      setActivitiesError(null)
+      axios
+        .get(`${API_URL}/api/v1/groups/${groupId}/activities/`, {
+          headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
+          withCredentials: true,
+        })
+        .then(res => setActivities(res.data))
+        .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
+        .finally(() => setActivitiesLoading(false))
+    }
+  }, [activeTab, groupId])
 
   const handleAmountChange = (amount: string) => {
     setNewExpense(prev => {
@@ -271,10 +323,16 @@ const GroupPage: React.FC = () => {
           Expenses
         </button>
         <button 
-          className={`tab ${activeTab === 'balances' ? 'active' : ''}`}
-          onClick={() => setActiveTab('balances')}
+          className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
         >
-          Balances
+          Overview
+        </button>
+        <button
+          className={`tab ${activeTab === 'activity' ? 'active' : ''}`}
+          onClick={() => setActiveTab('activity')}
+        >
+          Activity
         </button>
       </div>
 
@@ -300,28 +358,87 @@ const GroupPage: React.FC = () => {
             </div>
           ))}
         </div>
-      ) : (
-        <div className="balances-section">
-          <div className="balances-summary">
-            <h2>Balances</h2>
-            <div className="balance-cards">
-              {balances.map((balance) => (
-                <div key={balance.user} className="balance-card">
-                  <div className="balance-user">{balance.user}</div>
-                  <div className="balance-details">
-                    {Object.entries(balance.owes).map(([user, amount]) => (
-                      <div key={user} className="balance-owe">
-                        <span className="owe-label">owes {user}</span>
-                        <span className="owe-amount">${amount}</span>
-                      </div>
-                    ))}
-                  </div>
+      ) : activeTab === 'overview' ? (
+        <div className="overview-section">
+          <div className="overview-toggle">
+            <label>
+              <input
+                type="checkbox"
+                checked={simplify}
+                onChange={() => setSimplify(!simplify)}
+              />
+              Simplify Transactions
+            </label>
+          </div>
+
+          {summaryLoading && <div className="loading">Loading overview...</div>}
+          {summaryError && <div className="error-message">{summaryError}</div>}
+          {summary && (
+            <>
+              <h2>Total Spent: ₹{summary.total_spend}</h2>
+              {!simplify && (
+                <div className="user-summary">
+                  {summary.users_expense_details.map(detail => (
+                    <div key={detail.user.id} className="summary-card">
+                      <h3>{detail.user.username}</h3>
+                      <p>Paid: ₹{detail.paid}</p>
+                      <p>Owed: ₹{detail.owed}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {simplify && (
+                <>
+                  <h3>Simplified Transactions</h3>
+                  {Array.isArray(summary?.simplified_transactions) && summary.simplified_transactions.length > 0 ? (
+                    <div className="transaction-list">
+                      {summary.simplified_transactions.map((tran, idx) => {
+                        const from = groupMembers.find(m => m.id === tran.from_user.id)
+                        const to = groupMembers.find(m => m.id === tran.to_user.id)
+                        return (
+                          <div key={idx} className="transaction-card">
+                            <span className="transaction-from" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
+                              {from?.username}
+                            </span>
+                            <span> to pay → </span>
+                            <span className="transaction-to" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
+                              {to?.username}
+                            </span>
+                            <span>: </span>
+                            <span className="transaction-amount" style={{ color: 'lightgreen', fontWeight: 600 }}>
+                              ₹{tran.amount}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p>No simplified transactions available.</p>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      ) : activeTab === 'activity' ? (
+        <div className="activity-section">
+          {activitiesLoading && <div className="loading">Loading activities...</div>}
+          {activitiesError && <div className="error-message">{activitiesError}</div>}
+          {activities.length > 0 ? (
+            <div className="activity-list">
+              {activities.map((act, idx) => (
+                <div key={idx} className="activity-card">
+                  <p><strong className="transaction-from">{act.user.username}</strong> → {act.name}</p>
+                  <p>{act.description}</p>
+                  <span className="activity-timestamp">{new Date(act.timestamp).toLocaleString()}</span>
                 </div>
               ))}
             </div>
-          </div>
+          ) : (
+            <p>No activities yet.</p>
+          )}
         </div>
-      )}
+      ) : null}
       <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
         Add Expense
       </button>
