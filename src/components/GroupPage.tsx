@@ -39,10 +39,6 @@ interface Expense {
   created_at: string
 }
 
-interface Balance {
-  user: string
-  owes: { [key: string]: number }
-}
 
 // Overview summary types
 interface SummaryUserDetail { user: { id: number; username: string; email: string }; paid: string; owed: string; }
