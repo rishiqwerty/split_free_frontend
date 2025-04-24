@@ -61,7 +61,6 @@ const GroupPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>()
   const navigate = useNavigate()
   const [expenses, setExpenses] = useState<{ [key: number]: Expense }>({})
-  const [balances] = useState<Balance[]>([])
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
   const [groupName, setGroupName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
