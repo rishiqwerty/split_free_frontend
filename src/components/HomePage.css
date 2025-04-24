@@ -1,11 +1,13 @@
 .home-page {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
 }
 
 .header {
@@ -119,6 +121,10 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 80px;
 }
 
 .groups-grid {
@@ -133,12 +139,12 @@
   display: flex;
   align-items: center;
   padding: 1.5rem;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
   transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
 }
 
 .group-card:hover {
@@ -150,6 +156,8 @@
   font-size: 32px;
   flex-shrink: 0;
   line-height: 1;
+  color: var(--accent-color);
+  margin-right: 16px;
 }
 
 .group-details {
@@ -202,23 +210,45 @@
 }
 
 .create-group-btn {
-  align-self: center;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
   background: var(--accent-color);
-  color: white;
+  color: #fff;
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 500;
-  transition: all 0.2s;
-  margin-top: 20px;
+  border-radius: 50%;
+  font-size: 0;
+  overflow: hidden;
+  transition: width 0.3s ease, border-radius 0.3s ease;
+  z-index: 100;
+}
+
+.create-group-btn::before {
+  content: '+';
+  font-size: 2rem;
+  line-height: 1;
+  transition: opacity 0.3s ease;
 }
 
 .create-group-btn:hover {
-  background: var(--accent-color-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 150px;
+  border-radius: 30px;
+}
+
+.create-group-btn:hover::before {
+  opacity: 0;
+}
+
+.create-group-btn:hover::after {
+  content: 'Create Group';
+  font-size: 1rem;
+  white-space: nowrap;
+  /* margin-left: 8px; */
 }
 
 .create-group-modal {
@@ -319,25 +349,24 @@
 }
 
 .share-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+  position: static;
+  margin-left: auto;
   padding: 0.5rem 1rem;
-  background: #f3f4f6;
+  background: var(--accent-color);
+  color: #fff;
   border: none;
   border-radius: 6px;
-  color: #4b5563;
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, transform 0.1s ease;
   z-index: 10;
 }
 
 .share-btn:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--accent-hover);
 }
 
 .share-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.95);
 } 

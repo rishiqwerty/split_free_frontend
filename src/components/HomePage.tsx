@@ -183,25 +183,26 @@ const HomePage: React.FC = () => {
                   </span>
                 </p>
               </div>
-              <button 
+              <button
                 className="share-btn"
+                style={{ marginLeft: 'auto', position: 'static' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleShareGroup(group.id, group.uuid);
                 }}
               >
-                {copiedGroupId === group.id ? 'Copied!' : 'Share'}
+                {copiedGroupId === group.id ? 'Copied' : '🔗'}
               </button>
             </div>
           ))}
         </div>
-        <button 
-          className="create-group-btn"
-          onClick={() => setShowCreateGroup(true)}
-        >
-          Create New Group
-        </button>
       </div>
+      <button 
+        className="create-group-btn"
+        onClick={() => setShowCreateGroup(true)}
+      >
+        Create New Group
+      </button>
 
       {showCreateGroup && (
         <div className="create-group-modal">

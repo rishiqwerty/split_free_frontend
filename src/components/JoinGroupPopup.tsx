@@ -102,7 +102,7 @@ const JoinGroupPopup: React.FC = () => {
       <div className="popup-content">
         <h2>Join Group</h2>
         {groupDetails && (
-          <div className="group-details">
+          <div className="join-group-details">
             <h3 className="group-name">{groupDetails.name}</h3>
             <p className="group-description">{groupDetails.description}</p>
             <div className="group-meta">

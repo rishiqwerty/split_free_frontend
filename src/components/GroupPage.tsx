@@ -257,9 +257,6 @@ const GroupPage: React.FC = () => {
           <div className="user-info">
             <span className="user-name">Welcome, {userName}</span>
           </div>
-          <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
-            Add Expense
-          </button>
           <button className="logout-btn" onClick={handleLogout}>
             Logout
           </button>
@@ -325,7 +322,9 @@ const GroupPage: React.FC = () => {
           </div>
         </div>
       )}
-
+      <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
+        Add Expense
+      </button>
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>

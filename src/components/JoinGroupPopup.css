@@ -12,10 +12,13 @@
 }
 
 .popup-content {
-  background: white;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  margin: 1.5rem;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  border: 1px solid var(--border-color);
   width: 100%;
   max-width: 400px;
   text-align: center;
@@ -23,13 +26,13 @@
 
 .popup-content h2 {
   margin: 0 0 1rem 0;
-  color: #1f2937;
   font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .popup-content p {
   margin: 0 0 1.5rem 0;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 1rem;
 }
 
@@ -42,67 +45,69 @@
 
 .cancel-btn {
   padding: 0.75rem 1.5rem;
-  background: #f3f4f6;
-  border: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cancel-btn:hover {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .join-btn {
   padding: 0.75rem 1.5rem;
-  background: #3b82f6;
+  background: var(--accent-color);
   border: none;
   border-radius: 6px;
-  color: white;
+  color: #fff;
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .join-btn:hover {
-  background: #2563eb;
+  opacity: 0.9;
 }
 
 .join-btn:disabled {
-  background: #93c5fd;
+  background: var(--border-color);
   cursor: not-allowed;
 }
 
 .error-message {
-  background-color: #fee2e2;
-  color: #dc2626;
+  background-color: var(--error-bg);
+  color: var(--error-text);
   padding: 0.75rem;
   border-radius: 6px;
   margin-bottom: 1rem;
   font-size: 0.875rem;
 }
 
-.group-details {
+.join-group-details {
   margin: 1.5rem 0;
   padding: 1rem;
-  background: #f9fafb;
+  background: var(--bg-secondary);
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
 }
 
 .group-name {
   margin: 0 0 0.5rem 0;
-  color: #1f2937;
   font-size: 1.25rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 .group-description {
   margin: 0 0 1rem 0;
-  color: #4b5563;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -111,7 +116,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.75rem;
 }
 
@@ -127,15 +132,15 @@
   justify-content: center;
   align-items: center;
   padding: 2rem;
-  color: #6b7280;
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
 .already-member-message {
   margin-top: 1rem;
   padding: 0.75rem;
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--bg-secondary);
+  color: var(--accent-color);
   border-radius: 4px;
   text-align: center;
   font-weight: 500;

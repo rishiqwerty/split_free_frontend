@@ -37,6 +37,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
+  /* overflow: hidden; */
 }
 
 .header {
@@ -48,6 +51,9 @@
   background: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: 0 2px 4px var(--shadow-color);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .header-top {
@@ -64,26 +70,51 @@
 }
 
 .add-expense-btn {
+  position: absolute;
+  bottom: 120px;
+  left: 30px;
   background-color: var(--accent-color);
-  color: white;
+  color: #fff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
+  width: 50px;
+  height: 50px;
+  font-size: 0;
+  overflow: hidden;
+  border-radius: 50%;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-  flex-shrink: 0;
+  transition: width 0.3s ease, border-radius 0.3s ease;
+  z-index: 100;
+}
+
+.add-expense-btn::before {
+  content: '+';
+  font-size: 2rem;
+  line-height: 1;
+  transition: opacity 0.3s ease;
 }
 
 .add-expense-btn:hover {
+  width: 150px;
+  border-radius: 30px;
   background-color: var(--accent-hover);
+}
+
+.add-expense-btn:hover::before {
+  opacity: 0;
+}
+
+.add-expense-btn:hover::after {
+  content: 'Add Expense';
+  font-size: 1rem;
+  white-space: nowrap;
+  margin-left: 8px;
 }
 
 .tabs {
   display: flex;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--border-color);
+  
 }
 
 .tab {
@@ -94,11 +125,15 @@
   font-size: 16px;
   color: var(--text-secondary);
   position: relative;
+  
 }
 
 .tab.active {
   color: var(--accent-color);
   font-weight: 500;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .tab.active::after {
@@ -119,6 +154,9 @@
   overflow-y: auto;
   padding-right: 10px;
   margin-right: -10px;
+  position: relative;
+  z-index: 1;
+  /* overflow: hidden; */
 }
 
 .expenses-list::-webkit-scrollbar {
