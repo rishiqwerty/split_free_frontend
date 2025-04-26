@@ -37,6 +37,7 @@ interface Expense {
   splits: Split[]
   notes: string
   created_at: string
+  expense_icon: string
 }
 
 
@@ -81,6 +82,7 @@ const GroupPage: React.FC = () => {
   const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [activitiesError, setActivitiesError] = useState<string | null>(null)
   const [simplify, setSimplify] = useState<boolean>(false)
+  const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -238,20 +240,27 @@ const GroupPage: React.FC = () => {
         user: parseInt(userId)
       }))
 
-      const response = await axios.post(`${API_URL}/api/v1/expenses/expenses/`, {
-        ...newExpense,
-        amount: parseFloat(newExpense.amount),
-        splits: splits
-      }, { 
-        headers,
-        withCredentials: true 
-      })
+      let response;
+      if (editingExpenseId) {
+        response = await axios.put(
+          `${API_URL}/api/v1/expenses/expense/update/${editingExpenseId}/`,
+          { ...newExpense, amount: parseFloat(newExpense.amount), splits },
+          { headers, withCredentials: true }
+        )
+      } else {
+        response = await axios.post(
+          `${API_URL}/api/v1/expenses/expenses/`,
+          { ...newExpense, amount: parseFloat(newExpense.amount), splits },
+          { headers, withCredentials: true }
+        )
+      }
       setExpenses(prev => ({ ...prev, [response.data.id]: response.data }))
       setIsModalOpen(false)
+      setEditingExpenseId(null)
       setNewExpense({
         title: '',
         amount: '',
-        group: 1,
+        group: parseInt(groupId ?? '1', 10),
         paid_by_id: 1,
         split_between: [] as number[],
         splits: {} as { [key: number]: string },
@@ -284,6 +293,25 @@ const GroupPage: React.FC = () => {
       console.error('Logout failed:', error)
     }
   }
+
+  // Handler to delete an expense
+  const handleDeleteExpense = async (expenseId: number) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      await axios.delete(`${API_URL}/api/v1/expenses/expense/delete/${expenseId}/`, {
+        headers: { 'Authorization': `Token ${token}` },
+        withCredentials: true,
+      });
+      // Remove from local state
+      setExpenses(prev => {
+        const updated = { ...prev };
+        delete updated[expenseId];
+        return updated;
+      });
+    } catch (error) {
+      console.error('Failed to delete expense:', error);
+    }
+  };
 
   return (
     <div className="group-page">
@@ -339,7 +367,7 @@ const GroupPage: React.FC = () => {
               className="expense-card"
               onClick={() => setSelectedExpense(expense)}
             >
-              <div className="expense-icon">💰</div>
+              <div className="expense-icon">{expense.expense_icon}</div>
               <div className="expense-details">
                 <div className="expense-description">{expense.title}</div>
                 <div className="expense-meta">
@@ -434,15 +462,32 @@ const GroupPage: React.FC = () => {
           )}
         </div>
       ) : null}
-      <button className="add-expense-btn" onClick={() => setIsModalOpen(true)}>
+      <button
+        className="add-expense-btn"
+        onClick={() => {
+          // Reset form for new expense
+          setEditingExpenseId(null);
+          setNewExpense({
+            title: '',
+            amount: '',
+            group: parseInt(groupId ?? '1', 10),
+            paid_by_id: groupMembers[0]?.id || 1,
+            split_between: [],
+            splits: {},
+            notes: '',
+            date: new Date().toISOString().split('T')[0]
+          });
+          setIsModalOpen(true);
+        }}
+      >
         Add Expense
       </button>
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Add New Expense</h3>
-              <button className="close-btn" onClick={() => setIsModalOpen(false)}>×</button>
+              <h3>{editingExpenseId ? 'Edit Expense' : 'Add New Expense'}</h3>
+              <button className="close-btn" onClick={() => { setIsModalOpen(false); setEditingExpenseId(null); }}>×</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
@@ -557,7 +602,7 @@ const GroupPage: React.FC = () => {
                 </div>
 
                 <button type="submit" className="submit-btn">
-                  Add Expense
+                  {editingExpenseId ? 'Update Expense' : 'Add Expense'}
                 </button>
               </form>
             </div>
@@ -570,7 +615,48 @@ const GroupPage: React.FC = () => {
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Expense Details</h3>
-              <button className="close-btn" onClick={() => setSelectedExpense(null)}>×</button>
+              <div className="modal-actions">
+                <button
+                  className="edit-btn"
+                  onClick={() => {
+                    if (!selectedExpense) return;
+                    const expenseToEdit = selectedExpense;
+                    const splitsArray = expenseToEdit.splits && expenseToEdit.splits.length > 0
+                      ? expenseToEdit.splits
+                      : expenseToEdit.splits_detail.map(detail => {
+                          const member = groupMembers.find(m => m.username === detail.user);
+                          return { user: member?.id ?? 0, amount: detail.amount };
+                        });
+                    setSelectedExpense(null);
+                    setEditingExpenseId(expenseToEdit.id);
+                    setNewExpense({
+                      title: expenseToEdit.title,
+                      amount: expenseToEdit.amount,
+                      group: expenseToEdit.group,
+                      paid_by_id: expenseToEdit.paid_by.id,
+                      split_between: splitsArray.map(s => s.user),
+                      splits: splitsArray.reduce((acc, s) => ({ ...acc, [s.user]: s.amount }), {}),
+                      notes: expenseToEdit.notes,
+                      date: expenseToEdit.created_at.split('T')[0]
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  title="Edit Expense"
+                >
+                  Edit
+                </button>
+                <button
+                  className="delete-btn"
+                  onClick={() => { handleDeleteExpense(selectedExpense!.id); setSelectedExpense(null); }}
+                  title="Delete Expense"
+                >
+                  Delete
+                </button>
+                <button
+                  className="close-btn"
+                  onClick={() => setSelectedExpense(null)}
+                >×</button>
+              </div>
             </div>
             <div className="modal-body">
               <div className="expense-detail">

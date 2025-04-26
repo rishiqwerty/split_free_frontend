@@ -185,6 +185,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow-color);
   transition: transform 0.2s;
+  position: relative;
 }
 
 .expense-card:hover {
@@ -328,14 +329,32 @@
 .modal-header h3 {
   margin: 0;
   color: var(--text-primary);
+  flex: 1;
 }
 
-.close-btn {
+.modal-header .modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.modal-header .close-btn,
+.modal-header .edit-btn,
+.modal-header .delete-btn {
   background: none;
   border: none;
-  font-size: 24px;
-  cursor: pointer;
   color: var(--text-secondary);
+  font-size: 1rem;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.modal-header .close-btn:hover,
+.modal-header .edit-btn:hover,
+.modal-header .delete-btn:hover {
+  color: var(--accent-color);
+  transform: scale(1.1);
 }
 
 .modal-body {
@@ -747,4 +766,34 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
   align-self: flex-end;
+}
+
+.expense-card button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.expense-card button:hover {
+  color: var(--accent-color);
+}
+
+.modal-header .delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: color 0.2s ease;
+}
+.modal-header .delete-btn:hover {
+  color: var(--accent-color);
 } 

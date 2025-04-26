@@ -8,6 +8,7 @@ interface Group {
   id: number;
   name: string;
   description: string;
+  group_icon: string;
   created_at: string;
   members: any[];
   uuid: string;
@@ -22,7 +23,8 @@ const HomePage: React.FC = () => {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroup, setNewGroup] = useState({
     name: '',
-    description: ''
+    description: '',
+    group_icon: '👥'
   });
   const [copiedGroupId, setCopiedGroupId] = useState<number | null>(null);
 
@@ -74,9 +76,16 @@ const HomePage: React.FC = () => {
         'Authorization': `Token ${token}`,
       };
 
+      // Validate icon: must be an emoji, else use default
+      const defaultIcon = '👥';
+      const emojiRegex = /^\p{Extended_Pictographic}+$/u;
+      const iconVal = newGroup.group_icon.trim();
+      const validIcon = emojiRegex.test(iconVal) ? iconVal : defaultIcon;
+      const userSelectedIcon = emojiRegex.test(iconVal) ? true : false;
+      const payload = { name: newGroup.name, description: newGroup.description, group_icon: validIcon, user_selected_icon: userSelectedIcon };
       const response = await axios.post(
         `${API_URL}/api/v1/groups/create/`,
-        newGroup,
+        payload,
         { headers, withCredentials: true }
       );
 
@@ -89,7 +98,8 @@ const HomePage: React.FC = () => {
           name: response.data.name,
           description: response.data.description,
           created_at: response.data.created_at,
-          members: response.data.members || []
+          members: response.data.members || [],
+          group_icon: response.data.group_icon
         };
 
         setGroups(prevGroups => {
@@ -99,7 +109,7 @@ const HomePage: React.FC = () => {
         });
 
         setShowCreateGroup(false);
-        setNewGroup({ name: '', description: '' });
+        setNewGroup({ name: '', description: '', group_icon: defaultIcon });
       }
     } catch (error) {
       console.error('Error creating group:', error);
@@ -173,7 +183,7 @@ const HomePage: React.FC = () => {
               className="group-card"
               onClick={() => handleGroupClick(group.id)}
             >
-              <div className="group-icon">👥</div>
+              <div className="group-icon">{group.group_icon}</div>
               <div className="group-details">
                 <h3 className="group-name">{group.name}</h3>
                 <p className="group-meta">
@@ -228,12 +238,23 @@ const HomePage: React.FC = () => {
                 placeholder="Enter group description"
               />
             </div>
+            <div className="form-group" key="icon-group">
+              <label htmlFor="group-icon">Icon</label>
+              <input
+                type="text"
+                id="group-icon"
+                value={newGroup.group_icon}
+                onChange={(e) => setNewGroup({ ...newGroup, group_icon: e.target.value })}
+                placeholder="Enter an emoji"
+                maxLength={2}
+              />
+            </div>
             <div className="modal-actions" key="actions-group">
               <button 
                 className="cancel-btn"
                 onClick={() => {
                   setShowCreateGroup(false);
-                  setNewGroup({ name: '', description: '' });
+                  setNewGroup({ name: '', description: '', group_icon: '👥' });
                 }}
               >
                 Cancel
