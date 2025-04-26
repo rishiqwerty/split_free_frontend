@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { AxiosResponse } from 'axios'
 import { API_URL } from '../config'
 import './GroupPage.css'
 
@@ -36,6 +37,7 @@ interface Expense {
   splits_detail: SplitDetail[]
   splits: Split[]
   notes: string
+  expense_date: string
   created_at: string
   expense_icon: string
 }
@@ -71,7 +73,7 @@ const GroupPage: React.FC = () => {
     split_between: [] as number[],
     splits: {} as { [key: number]: string },
     notes: '',
-    date: new Date().toISOString().split('T')[0]
+    expense_date: new Date().toISOString().slice(0,16)
   })
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'expenses' | 'overview' | 'activity'>('expenses')
@@ -83,6 +85,15 @@ const GroupPage: React.FC = () => {
   const [activitiesError, setActivitiesError] = useState<string | null>(null)
   const [simplify, setSimplify] = useState<boolean>(false)
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
+  const [collapsedMonths, setCollapsedMonths] = useState<{ [key: string]: boolean }>({})
+  const [isSettleModalOpen, setIsSettleModalOpen] = useState(false)
+  const [settleForm, setSettleForm] = useState<{ from_user: number; to_user: number; amount: string; description: string; transaction_date: string }>({
+    from_user: 0,
+    to_user: 0,
+    amount: '',
+    description: '',
+    transaction_date: new Date().toISOString().slice(0,16)
+  })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -239,8 +250,7 @@ const GroupPage: React.FC = () => {
         amount: amount,
         user: parseInt(userId)
       }))
-
-      let response;
+      let response: AxiosResponse<Expense>
       if (editingExpenseId) {
         response = await axios.put(
           `${API_URL}/api/v1/expenses/expense/update/${editingExpenseId}/`,
@@ -265,7 +275,7 @@ const GroupPage: React.FC = () => {
         split_between: [] as number[],
         splits: {} as { [key: number]: string },
         notes: '',
-        date: new Date().toISOString().split('T')[0]
+        expense_date: new Date().toISOString().slice(0,16)
       })
     } catch (error) {
       console.error('Error creating expense:', error)
@@ -310,6 +320,89 @@ const GroupPage: React.FC = () => {
       });
     } catch (error) {
       console.error('Failed to delete expense:', error);
+    }
+  };
+
+  // Handler to settle a simplified transaction
+  // const settleTransaction = async (tran: SimplifiedTransaction) => {
+  //   try {
+  //     const token = localStorage.getItem('authToken');
+  //     const headers = { 'Authorization': `Token ${token}` };
+  //     // Create transaction
+  //     await axios.post(
+  //       `${API_URL}/api/v1/transactions/`,
+  //       {
+  //         group: parseInt(groupId ?? '0', 10),
+  //         from_user: tran.from_user.id,
+  //         to_user: tran.to_user.id,
+  //         amount: parseFloat(tran.amount),
+  //         transaction_date: new Date().toISOString().slice(0,16)
+  //       },
+  //       { headers, withCredentials: true }
+  //     );
+  //     // Refresh summary
+  //     const summaryRes = await axios.get(
+  //       `${API_URL}/api/v1/expenses/expenses/${groupId}/summary/?simplify=${simplify}`,
+  //       { headers, withCredentials: true }
+  //     );
+  //     setSummary(summaryRes.data);
+  //   } catch (error) {
+  //     console.error('Error settling transaction:', error);
+  //     setSummaryError('Failed to settle transaction');
+  //   }
+  // }
+
+  // Open settlement dialog with pre-filled values
+  const openSettleModal = (tran: SimplifiedTransaction) => {
+    setSettleForm({
+      from_user: tran.from_user.id,
+      to_user: tran.to_user.id,
+      amount: tran.amount,
+      description: '',
+      transaction_date: new Date().toISOString().slice(0,16)
+    });
+    setIsSettleModalOpen(true);
+  };
+
+  // Open settlement dialog for a summary user (non-simplified)
+  const openSettleFromSummary = (detail: SummaryUserDetail) => {
+    const current = groupMembers.find(m => m.username === userName);
+    setSettleForm({
+      from_user: detail.user.id,
+      to_user: current?.id ?? 0,
+      amount: detail.owed,
+      description: '',
+      transaction_date: new Date().toISOString().slice(0,16)
+    });
+    setIsSettleModalOpen(true);
+  };
+
+  // Confirm settlement with edited values
+  const handleConfirmSettle = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers = { 'Authorization': `Token ${token}` };
+      await axios.post(
+        `${API_URL}/api/v1/transactions/`,
+        {
+          group: parseInt(groupId ?? '0', 10),
+          from_user: settleForm.from_user,
+          to_user: settleForm.to_user,
+          description: settleForm.description,
+          amount: parseFloat(settleForm.amount),
+          transaction_date: settleForm.transaction_date
+        },
+        { headers, withCredentials: true }
+      );
+      const summaryRes = await axios.get(
+        `${API_URL}/api/v1/expenses/expenses/${groupId}/summary/?simplify=${simplify}`,
+        { headers, withCredentials: true }
+      );
+      setSummary(summaryRes.data);
+      setIsSettleModalOpen(false);
+    } catch (error) {
+      console.error('Error settling transaction:', error);
+      setSummaryError('Failed to settle transaction');
     }
   };
 
@@ -361,25 +454,43 @@ const GroupPage: React.FC = () => {
 
       {activeTab === 'expenses' ? (
         <div className="expenses-list">
-          {Object.values(expenses).map((expense) => (
-            <div 
-              key={expense.id} 
-              className="expense-card"
-              onClick={() => setSelectedExpense(expense)}
-            >
-              <div className="expense-icon">{expense.expense_icon}</div>
-              <div className="expense-details">
-                <div className="expense-description">{expense.title}</div>
-                <div className="expense-meta">
-                  <span className="expense-amount">₹{expense.amount}</span>
-                  <span className="expense-payer">paid by {expense.paid_by.username}</span>
-                  <span className="expense-date">
-                    {new Date(expense.created_at).toLocaleDateString()}
-                  </span>
+          {(() => {
+            const expensesArray = Object.values(expenses);
+            expensesArray.sort((a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime());
+            const groups: { [key: string]: Expense[] } = {};
+            expensesArray.forEach(exp => {
+              const d = new Date(exp.expense_date);
+              const key = `${d.getFullYear()}-${d.getMonth()}`;
+              (groups[key] = groups[key] || []).push(exp);
+            });
+            const entries = Object.entries(groups);
+            return entries.map(([key, exps], index) => {
+              const [year, month] = key.split('-');
+              const label = new Intl.DateTimeFormat('default', { month: 'long', year: 'numeric' }).format(new Date(Number(year), Number(month)));
+              const defaultCollapsed = index !== 0;
+              const collapsed = collapsedMonths[key] !== undefined ? collapsedMonths[key] : defaultCollapsed;
+              return (
+                <div key={key} className="expenses-month-group">
+                  <div className="month-header" onClick={() => setCollapsedMonths(prev => ({ ...prev, [key]: !prev[key] }))}>
+                    {label} {collapsed ? '+' : '-'}
+                  </div>
+                  {!collapsed && exps.map(expense => (
+                    <div key={expense.id} className="expense-card" onClick={() => setSelectedExpense(expense)}>
+                      <div className="expense-icon">{expense.expense_icon}</div>
+                      <div className="expense-details">
+                        <div className="expense-description">{expense.title}</div>
+                        <div className="expense-meta">
+                          <span className="expense-amount">₹{expense.amount}</span>
+                          <span className="expense-payer">paid by {expense.paid_by.username}</span>
+                          <span className="expense-date">{new Date(expense.expense_date).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            });
+          })()}
         </div>
       ) : activeTab === 'overview' ? (
         <div className="overview-section">
@@ -406,6 +517,15 @@ const GroupPage: React.FC = () => {
                       <h3>{detail.user.username}</h3>
                       <p>Paid: ₹{detail.paid}</p>
                       <p>Owed: ₹{detail.owed}</p>
+                      {parseFloat(detail.owed) > 0 ? (
+                        <button className="settle-btn" onClick={() => openSettleFromSummary(detail)}>
+                          Settle
+                        </button>
+                      ) : (
+                        <button className="settle-btn" disabled>
+                          All Settled
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -431,6 +551,9 @@ const GroupPage: React.FC = () => {
                             <span className="transaction-amount" style={{ color: 'lightgreen', fontWeight: 600 }}>
                               ₹{tran.amount}
                             </span>
+                            <button className="settle-btn" onClick={() => openSettleModal(tran)}>
+                              Settle
+                            </button>
                           </div>
                         )
                       })}
@@ -465,17 +588,17 @@ const GroupPage: React.FC = () => {
       <button
         className="add-expense-btn"
         onClick={() => {
-          // Reset form for new expense
+          // Reset form for new expense (datetime-local)
           setEditingExpenseId(null);
           setNewExpense({
             title: '',
             amount: '',
             group: parseInt(groupId ?? '1', 10),
             paid_by_id: groupMembers[0]?.id || 1,
-            split_between: [],
-            splits: {},
+            split_between: [] as number[],
+            splits: {} as { [key: number]: string },
             notes: '',
-            date: new Date().toISOString().split('T')[0]
+            expense_date: new Date().toISOString().slice(0,16)
           });
           setIsModalOpen(true);
         }}
@@ -492,12 +615,12 @@ const GroupPage: React.FC = () => {
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label htmlFor="date">Date</label>
+                  <label htmlFor="date">Expense Date</label>
                   <input
-                    type="date"
+                    type="datetime-local"
                     id="date"
-                    value={newExpense.date}
-                    onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
+                    value={newExpense.expense_date}
+                    onChange={(e) => setNewExpense({ ...newExpense, expense_date: e.target.value })}
                     required
                   />
                 </div>
@@ -637,7 +760,7 @@ const GroupPage: React.FC = () => {
                       split_between: splitsArray.map(s => s.user),
                       splits: splitsArray.reduce((acc, s) => ({ ...acc, [s.user]: s.amount }), {}),
                       notes: expenseToEdit.notes,
-                      date: expenseToEdit.created_at.split('T')[0]
+                      expense_date: expenseToEdit.created_at.slice(0,16)
                     });
                     setIsModalOpen(true);
                   }}
@@ -674,8 +797,8 @@ const GroupPage: React.FC = () => {
                     <span>{selectedExpense.paid_by.username}</span>
                   </div>
                   <div className="expense-amount-row">
-                    <span>Date:</span>
-                    <span>{new Date(selectedExpense.created_at).toLocaleString()}</span>
+                    <span>Expense Date:</span>
+                    <span>{new Date(selectedExpense.expense_date).toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="expense-splits">
@@ -700,7 +823,86 @@ const GroupPage: React.FC = () => {
                     })
                   )}
                 </div>
+                <div className="expense-date-detail">
+                  <span>Creation Date:</span>
+                  <span>{new Date(selectedExpense.created_at).toLocaleString()}</span>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSettleModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsSettleModalOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Confirm Settlement</h3>
+              <button className="close-btn" onClick={() => setIsSettleModalOpen(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={e => { e.preventDefault(); handleConfirmSettle(); }}>
+                <div className="form-group">
+                  <label htmlFor="settle-from">Payer</label>
+                  <select
+                    id="settle-from"
+                    value={settleForm.from_user}
+                    onChange={e => setSettleForm(prev => ({ ...prev, from_user: parseInt(e.target.value) }))}
+                    required
+                  >
+                    {groupMembers.map(member => (
+                      <option key={member.id} value={member.id}>{member.username}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="settle-to">Receiver</label>
+                  <select
+                    id="settle-to"
+                    value={settleForm.to_user}
+                    onChange={e => setSettleForm(prev => ({ ...prev, to_user: parseInt(e.target.value) }))}
+                    required
+                  >
+                    {groupMembers.map(member => (
+                      <option key={member.id} value={member.id}>{member.username}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="settle-amount">Amount</label>
+                  <input
+                    type="number"
+                    id="settle-amount"
+                    value={settleForm.amount}
+                    onChange={e => setSettleForm(prev => ({ ...prev, amount: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="settle-description">Description</label>
+                  <input
+                    type="text"
+                    id="settle-description"
+                    value={settleForm.description}
+                    onChange={e => setSettleForm(prev => ({ ...prev, description: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="settle-date">Date</label>
+                  <input
+                    type="datetime-local"
+                    id="settle-date"
+                    value={settleForm.transaction_date}
+                    onChange={e => setSettleForm(prev => ({ ...prev, transaction_date: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="modal-actions">
+                  <button type="button" className="cancel-btn" onClick={() => setIsSettleModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="confirm-btn">Confirm</button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
