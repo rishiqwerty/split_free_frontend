@@ -380,18 +380,18 @@ const GroupPage: React.FC = () => {
   };
 
   // Open settlement dialog for a summary user (non-simplified)
-  const openSettleFromSummary = (detail: SummaryUserDetail) => {
-    const current = groupMembers.find(m => m.username === userName);
-    setSettleForm({
-      from_user: detail.user.id,
-      to_user: current?.id ?? 0,
-      amount: detail.owed,
-      description: '',
-      transaction_date: new Date().toISOString().slice(0,16),
-      maxAmount: parseFloat(detail.owed)
-    });
-    setIsSettleModalOpen(true);
-  };
+  // const openSettleFromSummary = (detail: SummaryUserDetail) => {
+  //   const current = groupMembers.find(m => m.username === userName);
+  //   setSettleForm({
+  //     from_user: detail.user.id,
+  //     to_user: current?.id ?? 0,
+  //     amount: detail.owed,
+  //     description: '',
+  //     transaction_date: new Date().toISOString().slice(0,16),
+  //     maxAmount: parseFloat(detail.owed)
+  //   });
+  //   setIsSettleModalOpen(true);
+  // };
 
   // Open settlement dialog for a non-simplified transaction
   const openSettleFromTransaction = (tx: NonSimplifiedTransaction) => {
