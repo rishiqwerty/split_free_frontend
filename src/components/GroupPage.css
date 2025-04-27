@@ -112,28 +112,27 @@
 
 .tabs {
   display: flex;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  gap: 16px;
   border-bottom: 1px solid var(--border-color);
-  
 }
 
 .tab {
-  padding: 10px 20px;
+  flex: 1; /* Ensures equal width for each tab */
+  padding: 12px;
   background: none;
   border: none;
   cursor: pointer;
   font-size: 16px;
   color: var(--text-secondary);
   position: relative;
-  
+  transition: all 0.3s ease;
 }
 
 .tab.active {
   color: var(--accent-color);
-  font-weight: 500;
+  font-weight: 600;
   position: relative;
-  z-index: 1;
-  overflow: hidden;
 }
 
 .tab.active::after {
@@ -145,6 +144,29 @@
   height: 2px;
   background-color: var(--accent-color);
 }
+
+.tab:hover {
+  background-color: var(--bg-secondary);
+}
+
+.tab-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: opacity 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .tab {
+    font-size: 14px; /* Adjust font size for mobile */
+    padding: 8px; /* Reduce padding on smaller screens */
+  }
+
+  .tab-container {
+    gap: 10px; /* Reduce gap on mobile */
+  }
+}
+
 
 .expenses-list {
   display: flex;
@@ -178,8 +200,9 @@
 }
 
 .expense-card {
-  display: flex;
+  display: flex !important;
   align-items: center;
+  justify-content: space-between;
   padding: 16px;
   background: var(--bg-secondary);
   border-radius: 8px;
@@ -200,21 +223,31 @@
 }
 
 .expense-details {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
 }
 
 .expense-description {
+  margin: 0;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
   font-weight: 500;
-  color: var(--text-primary);
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-right: 24px;
+}
+
+.expense-payer {
+  margin-top: 4px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.expense-date {
+  flex-shrink: 0;
+  margin-left: 16px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .expense-meta {
@@ -232,16 +265,6 @@
   white-space: nowrap;
   min-width: 80px;
   text-align: right;
-}
-
-.expense-payer {
-  white-space: nowrap;
-  min-width: 120px;
-}
-
-.expense-date {
-  white-space: nowrap;
-  min-width: 100px;
 }
 
 .balances-section {
@@ -706,21 +729,41 @@
 .transaction-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  gap: 16px;
   margin-top: 1rem;
 }
 .transaction-card {
   background: var(--bg-secondary);
-  padding: 1rem;
+  padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
   text-align: left;
+  min-width: 220px;
 }
 
-.transaction-card span.transaction-from,
-.transaction-card span.transaction-to,
+.transaction-card .trasaction-amount {
+  display: block;
+  margin: 0;
+}
+
+.transaction-card .settle-btn {
+  margin-top: 0.5rem;
+  align-self: flex-end;
+}
+.transaction-card .transaction-from {
+  font-weight: 600;
+}
+.transaction-card .transaction-to {
+  font-weight: 600;
+}
+
+
 .transaction-card span.transaction-amount {
-  color: var(--accent-color);
+  color: #00a68c;
   font-weight: 600;
 }
 
@@ -797,3 +840,138 @@
 .modal-header .delete-btn:hover {
   color: var(--accent-color);
 }
+
+/* Subtle styling for settle buttons */
+.settle-btn {
+  background: transparent;
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.settle-btn:hover:not(:disabled) {
+  background: var(--accent-color);
+  color: var(--bg-light);
+}
+
+.settle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media screen and (max-width: 768px) {
+  .header {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .brand-name {
+    font-size: 24px;
+  }
+
+  .brand-tagline {
+    font-size: 12px;
+  }
+
+  .group-name {
+    font-size: 16px;
+  }
+
+  .group-subheader {
+    font-size: 12px;
+  }
+
+  .header h1 {
+    font-size: 20px;
+  }
+
+  .tab {
+    font-size: 14px;
+    padding: 8px 14px;
+  }
+
+  .add-expense-btn {
+    width: 45px;
+    height: 45px;
+  }
+
+  .add-expense-btn::before {
+    font-size: 1.8rem;
+  }
+
+  .expense-description {
+    font-size: 14px;
+  }
+
+  .expense-meta {
+    font-size: 12px;
+    gap: 16px;
+  }
+
+  .expense-amount {
+    font-size: 14px;
+  }
+
+  /* Stack details vertically and allow wrapping */
+  .expense-details {
+    display: block;
+  }
+  .expense-description {
+    margin-bottom: 8px;
+    white-space: normal;
+  }
+  .expense-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .expense-amount,
+  .expense-payer,
+  .expense-date {
+    min-width: 0;
+  }
+}
+
+/* Mobile-specific stacking for expense cards */
+@media (max-width: 768px) {
+  /* Use grid layout for expense cards on mobile */
+  .expense-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "icon desc"
+      "icon meta";
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: center;
+    padding: 12px;
+  }
+  .expense-icon {
+    grid-area: icon;
+    margin: 0;
+  }
+  .expense-description {
+    grid-area: desc;
+    margin: 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .expense-meta {
+    grid-area: meta;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  /* Remove nested flex-blocks from expense-details */
+  .expense-details {
+    display: contents;
+  }
+}
+

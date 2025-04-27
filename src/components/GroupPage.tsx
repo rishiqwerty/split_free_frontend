@@ -46,7 +46,20 @@ interface Expense {
 // Overview summary types
 interface SummaryUserDetail { user: { id: number; username: string; email: string }; paid: string; owed: string; }
 interface SimplifiedTransaction { from_user: { id: number; username: string; email: string; first_name: string; }; to_user: { id: number; username: string; email: string; first_name: string; }; amount: string; }
-interface Summary { total_spend: string; users_expense_details: SummaryUserDetail[]; total_balance: string; simplified_transactions: SimplifiedTransaction[]; }
+interface NonSimplifiedTransaction {
+  from_user: User;
+  to_user: User;
+  amount: string;
+  expense: string;
+}
+
+interface Summary {
+  total_spend: string;
+  total_balance: string;
+  users_expense_details?: SummaryUserDetail[];
+  simplified_transactions: SimplifiedTransaction[];
+  non_simplified_transactions?: NonSimplifiedTransaction[];
+}
 
 // Activity types
 interface Activity {
@@ -87,12 +100,13 @@ const GroupPage: React.FC = () => {
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
   const [collapsedMonths, setCollapsedMonths] = useState<{ [key: string]: boolean }>({})
   const [isSettleModalOpen, setIsSettleModalOpen] = useState(false)
-  const [settleForm, setSettleForm] = useState<{ from_user: number; to_user: number; amount: string; description: string; transaction_date: string }>({
+  const [settleForm, setSettleForm] = useState<{ from_user: number; to_user: number; amount: string; description: string; transaction_date: string; maxAmount: number }>({
     from_user: 0,
     to_user: 0,
     amount: '',
     description: '',
-    transaction_date: new Date().toISOString().slice(0,16)
+    transaction_date: new Date().toISOString().slice(0,16),
+    maxAmount: 0
   })
 
   useEffect(() => {
@@ -128,7 +142,7 @@ const GroupPage: React.FC = () => {
           return acc
         }, {})
         setExpenses(expensesMap)
-      } catch (error) {
+    } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again later.')
       }
@@ -359,7 +373,8 @@ const GroupPage: React.FC = () => {
       to_user: tran.to_user.id,
       amount: tran.amount,
       description: '',
-      transaction_date: new Date().toISOString().slice(0,16)
+      transaction_date: new Date().toISOString().slice(0,16),
+      maxAmount: parseFloat(tran.amount)
     });
     setIsSettleModalOpen(true);
   };
@@ -372,7 +387,21 @@ const GroupPage: React.FC = () => {
       to_user: current?.id ?? 0,
       amount: detail.owed,
       description: '',
-      transaction_date: new Date().toISOString().slice(0,16)
+      transaction_date: new Date().toISOString().slice(0,16),
+      maxAmount: parseFloat(detail.owed)
+    });
+    setIsSettleModalOpen(true);
+  };
+
+  // Open settlement dialog for a non-simplified transaction
+  const openSettleFromTransaction = (tx: NonSimplifiedTransaction) => {
+    setSettleForm({
+      from_user: tx.from_user.id,
+      to_user: tx.to_user.id,
+      amount: tx.amount,
+      description: tx.expense,
+      transaction_date: new Date().toISOString().slice(0,16),
+      maxAmount: parseFloat(tx.amount)
     });
     setIsSettleModalOpen(true);
   };
@@ -412,7 +441,7 @@ const GroupPage: React.FC = () => {
       
       <div className="header">
         <div className="header-top">
-          <div className="brand">
+          <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
             <h1 className="brand-name">SplitFree</h1>
             <p className="brand-tagline">Split expenses, stay free</p>
           </div>
@@ -479,12 +508,9 @@ const GroupPage: React.FC = () => {
                       <div className="expense-icon">{expense.expense_icon}</div>
                       <div className="expense-details">
                         <div className="expense-description">{expense.title}</div>
-                        <div className="expense-meta">
-                          <span className="expense-amount">₹{expense.amount}</span>
-                          <span className="expense-payer">paid by {expense.paid_by.username}</span>
-                          <span className="expense-date">{new Date(expense.expense_date).toLocaleDateString()}</span>
-                        </div>
+                        <div className="expense-payer">paid by {expense.paid_by.username}</div>
                       </div>
+                      <div className="expense-date">{new Date(expense.expense_date).toLocaleString()}</div>
                     </div>
                   ))}
                 </div>
@@ -511,24 +537,25 @@ const GroupPage: React.FC = () => {
             <>
               <h2>Total Spent: ₹{summary.total_spend}</h2>
               {!simplify && (
-                <div className="user-summary">
-                  {summary.users_expense_details.map(detail => (
-                    <div key={detail.user.id} className="summary-card">
-                      <h3>{detail.user.username}</h3>
-                      <p>Paid: ₹{detail.paid}</p>
-                      <p>Owed: ₹{detail.owed}</p>
-                      {parseFloat(detail.owed) > 0 ? (
-                        <button className="settle-btn" onClick={() => openSettleFromSummary(detail)}>
-                          Settle
-                        </button>
-                      ) : (
-                        <button className="settle-btn" disabled>
-                          All Settled
-                        </button>
-                      )}
+                <>
+                  <h3>Balance</h3>
+                  {(summary.non_simplified_transactions && summary.non_simplified_transactions.length > 0) ? (
+                    <div className="transaction-list">
+                      {summary.non_simplified_transactions.map((tx, idx) => (
+                        <div key={idx} className="transaction-card">
+                          <span><span className="transaction-from">{tx.from_user.username}</span>to pay → <span className="transaction-to">{tx.to_user.username}</span></span>
+                          <span className='transaction-amount'> ₹{tx.amount}</span>
+                          
+                          <button className="settle-btn" onClick={() => openSettleFromTransaction(tx)}>
+                            Settle
+                          </button>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  ) : (
+                    <p>No transactions available.</p>
+                  )}
+                </>
               )}
               {simplify && (
                 <>
@@ -540,15 +567,11 @@ const GroupPage: React.FC = () => {
                         const to = groupMembers.find(m => m.id === tran.to_user.id)
                         return (
                           <div key={idx} className="transaction-card">
-                            <span className="transaction-from" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
-                              {from?.username}
+                            <span>
+                              <span className="transaction-from" style={{ fontWeight: 600 }}>{from?.username}</span> to pay → <span className="transaction-to" style={{ fontWeight: 600 }}>{to?.username}</span>
                             </span>
-                            <span> to pay → </span>
-                            <span className="transaction-to" style={{ color: 'var(--accent-color)', fontWeight: 600 }}>
-                              {to?.username}
-                            </span>
-                            <span>: </span>
-                            <span className="transaction-amount" style={{ color: 'lightgreen', fontWeight: 600 }}>
+
+                            <span className="transaction-amount" style={{ color: '#00a68c', fontWeight: 600 }}>
                               ₹{tran.amount}
                             </span>
                             <button className="settle-btn" onClick={() => openSettleModal(tran)}>
@@ -660,8 +683,8 @@ const GroupPage: React.FC = () => {
                     {groupMembers.map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.username}
-                      </option>
-                    ))}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -688,8 +711,8 @@ const GroupPage: React.FC = () => {
                                   amount: equalAmount
                                 }))
                                 
-                                setNewExpense({ 
-                                  ...newExpense, 
+                        setNewExpense({
+                          ...newExpense,
                                   split_between: newSplitBetween,
                                   splits: newSplits.reduce((acc, split) => ({ ...acc, [split.user]: split.amount }), {})
                                 });
@@ -873,11 +896,17 @@ const GroupPage: React.FC = () => {
                   <input
                     type="number"
                     id="settle-amount"
+                    min="0"
+                    max={settleForm.maxAmount}
+                    step="0.01"
                     value={settleForm.amount}
                     onChange={e => setSettleForm(prev => ({ ...prev, amount: e.target.value }))}
                     required
                   />
                 </div>
+                {parseFloat(settleForm.amount) > settleForm.maxAmount && (
+                  <p className="error-message">Amount cannot exceed ₹{settleForm.maxAmount}</p>
+                )}
                 <div className="form-group">
                   <label htmlFor="settle-description">Description</label>
                   <input
@@ -900,7 +929,7 @@ const GroupPage: React.FC = () => {
                 </div>
                 <div className="modal-actions">
                   <button type="button" className="cancel-btn" onClick={() => setIsSettleModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="confirm-btn">Confirm</button>
+                  <button type="submit" className="confirm-btn" disabled={parseFloat(settleForm.amount) > settleForm.maxAmount}>Confirm</button>
                 </div>
               </form>
             </div>

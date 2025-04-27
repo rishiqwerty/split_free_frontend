@@ -201,7 +201,7 @@ const HomePage: React.FC = () => {
                   handleShareGroup(group.id, group.uuid);
                 }}
               >
-                {copiedGroupId === group.id ? 'Copied' : '🔗'}
+                {copiedGroupId === group.id ? 'Copied' : 'Share'}
               </button>
             </div>
           ))}

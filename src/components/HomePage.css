@@ -1,13 +1,21 @@
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 .home-page {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   position: relative;
+  z-index: 1;
+  /* overflow: hidden; */
 }
 
 .header {
@@ -19,6 +27,9 @@
   background: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: 0 2px 4px var(--shadow-color);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
 }
 
 .header-top {
@@ -128,17 +139,24 @@
 }
 
 .groups-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
 }
 
 .group-card {
-  position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "icon name share"
+    "icon members share"
+    "icon date  share";
   align-items: center;
-  padding: 1.5rem;
+  gap: 8px 12px;
+  padding: 12px;
+  position: relative;
   background: var(--bg-secondary);
   border-radius: 12px;
   box-shadow: 0 2px 4px var(--shadow-color);
@@ -153,42 +171,72 @@
 }
 
 .group-icon {
+  grid-area: icon;
+  margin: 0;
   font-size: 32px;
   flex-shrink: 0;
   line-height: 1;
   color: var(--accent-color);
-  margin-right: 16px;
 }
 
 .group-details {
-  flex: 1;
-  min-width: 0;
+  grid-area: name start;
+  display: contents;
 }
 
 .group-name {
+  grid-area: name;
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
   font-size: 16px;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 4px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.group-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--text-secondary);
-  font-size: 13px;
 }
 
 .members-count {
+  grid-area: members;
+  font-size: 13px;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .created-date {
+  grid-area: date;
+  font-size: 12px;
+  color: var(--text-secondary);
   opacity: 0.8;
+}
+
+.share-btn {
+  grid-area: share;
+  justify-self: end;
+  align-self: start;
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  background: var(--accent-color);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  z-index: 10;
+}
+
+.share-btn:hover {
+  background: var(--accent-hover);
+}
+
+.share-btn:active {
+  transform: scale(0.95);
+}
+
+/* Cleanup old flex styles */
+.group-card .group-details > p,
+.group-card .group-details > div {
+  margin: 0;
 }
 
 .error-message {
@@ -348,25 +396,87 @@
   cursor: not-allowed;
 }
 
-.share-btn {
-  position: static;
-  margin-left: auto;
-  padding: 0.5rem 1rem;
-  background: var(--accent-color);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  z-index: 10;
-}
-
-.share-btn:hover {
-  background: var(--accent-hover);
-}
-
-.share-btn:active {
-  transform: scale(0.95);
+/* Mobile responsiveness for home page */
+@media (max-width: 768px) {
+  /* Ensure page grows with content */
+  .home-page {
+    height: auto !important;
+    
+  }
+  /* Let groups section size to content */
+  .groups-section {
+    flex: none !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+  /* Make group cards full width */
+  .group-card {
+    width: 100% !important;
+  }
+  .header {
+    padding: 10px;
+    gap: 8px;
+  }
+  .header-top,
+  .header-bottom {
+    flex-direction: row;
+    align-items: center;
+  }
+  .groups-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .group-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .group-icon {
+    margin-right: 0;
+    margin-bottom: 8px;
+    font-size: 28px;
+  }
+  .group-details {
+    width: 100%;
+  }
+  .group-name {
+    font-size: 16px !important;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  .group-meta {
+    flex-direction: column;
+    gap: 6px;
+    font-size: 12px !important;
+  }
+  .share-btn {
+    align-self: flex-end;
+    margin-top: 8px;
+    font-size: 12px !important;
+  }
+  .create-group-btn {
+    bottom: 20px;
+    left: auto;
+    right: 20px;
+  }
+  .create-group-modal .modal-content {
+    width: 95%;
+    padding: 16px;
+  }
+  /* Smaller typography for group cards and header */
+  .brand-name {
+    font-size: 24px !important;
+  }
+  .brand-tagline {
+    font-size: 12px !important;
+  }
+  .members-count,
+  .created-date {
+    font-size: 11px !important;
+  }
+  .logout-btn {
+    font-size: 12px !important;
+  }
 } 
