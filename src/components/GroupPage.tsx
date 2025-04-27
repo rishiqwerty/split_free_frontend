@@ -304,7 +304,7 @@ const GroupPage: React.FC = () => {
         'Authorization': `Token ${token}`,
       };
 
-      const response = await fetch(`${API_URL}/api/auth/logout/`, {
+      const response = await fetch(`${API_URL}/auth/logout/`, {
         method: 'POST',
         headers,
         credentials: 'include'
@@ -543,7 +543,7 @@ const GroupPage: React.FC = () => {
                     <div className="transaction-list">
                       {summary.non_simplified_transactions.map((tx, idx) => (
                         <div key={idx} className="transaction-card">
-                          <span><span className="transaction-from">{tx.from_user.username}</span>to pay → <span className="transaction-to">{tx.to_user.username}</span></span>
+                          <span><span className="transaction-from">{tx.from_user.username}</span> to pay → <span className="transaction-to">{tx.to_user.username}</span></span>
                           <span className='transaction-amount'> ₹{tx.amount}</span>
                           
                           <button className="settle-btn" onClick={() => openSettleFromTransaction(tx)}>

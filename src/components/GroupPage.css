@@ -202,17 +202,19 @@
 .expense-card {
   display: flex !important;
   align-items: center;
-  justify-content: space-between;
+  cursor: pointer;
+  border-left: 4px solid transparent;
+  transition: background 0.2s ease, border-left-color 0.2s ease, box-shadow 0.2s ease;
   padding: 16px;
   background: var(--bg-secondary);
   border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow-color);
-  transition: transform 0.2s;
-  position: relative;
 }
 
 .expense-card:hover {
-  transform: translateY(-2px);
+  background: rgba(0, 166, 140, 0.1) !important;
+  border-left-color: var(--accent-color) !important;
+  box-shadow: 0 4px 8px var(--shadow-color) !important;
 }
 
 .expense-icon {
@@ -767,24 +769,43 @@
   font-weight: 600;
 }
 
-/* Activity Section */
-.activity-section {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
 /* Activity List */
 .activity-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Scrollable list like expenses */
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+  position: relative;
+  z-index: 1;
+}
+
+.activity-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.activity-list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 /* Individual Activity Card */
 .activity-card {
   background: var(--bg-secondary);
+  width: 100%;
+  box-sizing: border-box;
   padding: 1rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px var(--shadow-color);
@@ -973,5 +994,32 @@
   .expense-details {
     display: contents;
   }
+}
+
+.activity-section {
+  flex: 1;
+  min-height: 0;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  padding-right: 10px;
+  margin-right: -10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Scrollbar styling for activity-section */
+.activity-section::-webkit-scrollbar {
+  width: 8px;
+}
+.activity-section::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+.activity-section::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+.activity-section::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 

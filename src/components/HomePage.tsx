@@ -124,7 +124,7 @@ const HomePage: React.FC = () => {
         'Authorization': `Token ${token}`,
       };
 
-      const response = await fetch(`${API_URL}/api/auth/logout/`, {
+      const response = await fetch(`${API_URL}/auth/logout/`, {
         method: 'POST',
         headers,
         credentials: 'include'
