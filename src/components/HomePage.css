@@ -4,13 +4,13 @@ html, body {
 }
 
 .home-page {
-  max-width: 1200px;
+  max-width: 80vw;
   margin: 0 auto;
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  min-height: 100vh;
+  height: 95vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -127,22 +127,39 @@ html, body {
 }
 
 .groups-section {
-  width: 100%;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
   flex: 1;
   min-height: 0;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
-  padding-bottom: 80px;
+  padding-right: 10px;
+  margin-right: -10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Scrollbar styling for groups section */
+.groups-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.groups-section::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.groups-section::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.groups-section::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
 }
 
 .groups-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
 }
 
 .group-card {

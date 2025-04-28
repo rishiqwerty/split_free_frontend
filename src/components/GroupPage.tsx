@@ -96,6 +96,9 @@ const GroupPage: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>([])
   const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [activitiesError, setActivitiesError] = useState<string | null>(null)
+  const [aiOverview, setAiOverview] = useState<string>('')
+  const [aiOverviewLoading, setAiOverviewLoading] = useState(false)
+  const [aiOverviewError, setAiOverviewError] = useState<string | null>(null)
   const [simplify, setSimplify] = useState<boolean>(false)
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
   const [collapsedMonths, setCollapsedMonths] = useState<{ [key: string]: boolean }>({})
@@ -181,6 +184,34 @@ const GroupPage: React.FC = () => {
         .finally(() => setActivitiesLoading(false))
     }
   }, [activeTab, groupId])
+
+  // Add this new useEffect after the existing ones
+  useEffect(() => {
+    const fetchAiOverview = async () => {
+      try {
+        setAiOverviewLoading(true)
+        setAiOverviewError(null)
+        const token = localStorage.getItem('authToken')
+        const headers = {
+          'Authorization': `Token ${token}`,
+        }
+
+        const response = await axios.get(`${API_URL}/api/v1/groups/${groupId}/overview/`, {
+          headers,
+          withCredentials: true
+        })
+
+        setAiOverview(response.data.ai_overview)
+    } catch (error) {
+        console.error('Error fetching AI overview:', error)
+        setAiOverviewError('Failed to load AI overview')
+      } finally {
+        setAiOverviewLoading(false)
+      }
+    }
+
+    fetchAiOverview()
+  }, [groupId])
 
   const handleAmountChange = (amount: string) => {
     setNewExpense(prev => {
@@ -458,6 +489,19 @@ const GroupPage: React.FC = () => {
             Logout
           </button>
         </div>
+      </div>
+
+      {/* AI Overview Section */}
+      <div className="ai-overview-section">
+        {aiOverviewLoading ? (
+          <div className="ai-overview-loading">Loading AI overview...</div>
+        ) : aiOverviewError ? (
+          <div className="ai-overview-error">{aiOverviewError}</div>
+        ) : (
+          <div className="ai-overview-content">
+            <p>{aiOverview}</p>
+          </div>
+        )}
       </div>
 
       <div className="tabs">
