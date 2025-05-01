@@ -1,54 +1,157 @@
-# React + TypeScript + Vite
+# Split Free Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Split Free** is a web application designed to simplify expense sharing among groups. Whether you're splitting bills with roommates, planning a trip with friends, or managing shared expenses, Split Free helps you track and settle balances effortlessly.
 
-Currently, two official plugins are available:
+🌐 Live Demo: [split-free-frontend.vercel.app](https://split-free-frontend.vercel.app)  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+⚠️ Note:
+The initial load of the app might take around 40–50 seconds since the backend server is hosted on Render’s free tier, which can cause it to spin down when idle.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Table of Contents
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+- **Group Management**: Create and manage groups for different expense-sharing scenarios.
+- **Expense Tracking**: Add, edit, and delete expenses with ease.
+- **Real-time Calculations**: Automatically calculates who owes whom and how much.
+- **Responsive Design**: Optimized for both desktop and mobile devices.
+- **Smart Overview**: Smart overviews, spending summaries, and detailed expense breakdowns powered by AI
+- **Smart Group/Expense Icons**: Auto icon assignment for expenses and groups for quick visual cues.
+- **User-Friendly Interface**: Intuitive UI for seamless navigation and interaction.
+
+---
+
+## Tech Stack
+
+- **Frontend**: [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
+- **Bundler**: [Vite](https://vitejs.dev/) for fast and efficient development
+- **Deployment**: [Vercel](https://vercel.com/) for continuous deployment
+
+---
+
+## Getting Started
+
+Follow these steps to set up the project locally:
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v14 or higher)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+
+### Installation
+
+1. **Clone the repository:**
+
+   ```bash
+   git clone https://github.com/rishiqwerty/split_free_frontend.git
+   cd split_free_frontend
+   ```
+
+2. **Install dependencies:**
+
+   Using npm:
+
+   ```bash
+   npm install
+   ```
+
+   Or using yarn:
+
+   ```bash
+   yarn install
+   ```
+
+3. **Start the development server:**
+
+   Using npm:
+
+   ```bash
+   npm run dev
+   ```
+
+   Or using yarn:
+
+   ```bash
+   yarn dev
+   ```
+
+4. **Open your browser:**
+
+   Navigate to [http://localhost:5173](http://localhost:5173) to view the application.
+
+---
+
+## Environmental settings
+
+
+## Usage
+
+1. **Create a Group**: Click on "Create Group" and enter the group name and members' details.
+2. **Add Expenses**: Within the group, add expenses by specifying the amount, payer, and participants.
+3. **View Balances**: The app calculates and displays who owes whom and how much.
+4. **Settle Up**: Record payments to settle debts within the group.
+
+---
+
+## Project Structure
+
+```
+split_free_frontend/
+├── public/             # Static assets
+├── src/                # Source code
+│   ├── components/     # Reusable components
+│   ├── pages/          # Page components
+│   ├── context/        # Context API providers
+│   ├── hooks/          # Custom React hooks
+│   ├── utils/          # Utility functions
+│   └── App.tsx         # Root component
+├── index.html          # HTML template
+├── package.json        # Project metadata and scripts
+├── tailwind.config.js  # Tailwind CSS configuration
+└── vite.config.ts      # Vite configuration
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Contributing
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Contributions are welcome! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a new branch**:
+
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+3. **Make your changes**
+4. **Commit your changes**:
+
+   ```bash
+   git commit -m "Add your message here"
+   ```
+
+5. **Push to your fork**:
+
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+
+6. **Create a Pull Request**: Submit your PR for review.
+
+Please ensure your code adheres to the existing code style and includes relevant tests.
+
+---
+
