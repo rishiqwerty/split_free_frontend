@@ -44,7 +44,7 @@ interface Expense {
 
 
 // Overview summary types
-interface SummaryUserDetail { user: { id: number; username: string; email: string }; paid: string; owed: string; }
+// interface SummaryUserDetail { user: { id: number; username: string; email: string }; paid: string; owed: string; }
 interface SimplifiedTransaction { from_user: { id: number; username: string; email: string; first_name: string; }; to_user: { id: number; username: string; email: string; first_name: string; }; amount: string; }
 interface NonSimplifiedTransaction {
   from_user: User;
@@ -55,8 +55,8 @@ interface NonSimplifiedTransaction {
 
 interface Summary {
   total_spend: string;
-  total_balance: string;
-  users_expense_details?: SummaryUserDetail[];
+  // total_balance: string;
+  // users_expense_details?: SummaryUserDetail[];
   simplified_transactions: SimplifiedTransaction[];
   non_simplified_transactions?: NonSimplifiedTransaction[];
 }

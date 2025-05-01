@@ -4,14 +4,31 @@ import GroupPage from './components/GroupPage';
 import Login from './components/Login';
 import HomePage from './components/HomePage';
 import './App.css';
+import { API_URL } from './config';
 import JoinGroupPopup from './components/JoinGroupPopup';
+
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
+  const [countdown, setCountdown] = useState<number>(60);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const response = await fetch(`${API_URL}/auth/health-check/`);
+        setIsBackendOnline(response.ok);
+        if (response.ok) {
+          setCountdown(60); // Reset countdown when backend is up
+        }
+      } catch (error) {
+        console.error('Backend health check failed:', error);
+        setIsBackendOnline(false);
+      }
+    };
+
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('authToken');
@@ -44,11 +61,51 @@ const App: React.FC = () => {
       }
     };
 
+    checkBackendHealth();
     checkAuth();
   }, [location.pathname]);
 
+  // Countdown timer effect
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!isBackendOnline && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            window.location.reload();
+            return 60;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isBackendOnline, countdown]);
+
   if (isLoading) {
     return <div className="loading">Loading...</div>;
+  }
+
+  if (!isBackendOnline) {
+    return (
+      <div className="backend-offline">
+        <div className="branding">
+          <h1 className="app-title">SplitFree</h1>
+          <p className="app-tagline">Split expenses, not friendships</p>
+        </div>
+        <img 
+          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGJhMWR5NXlscmZhNjJqc2RoN3I5MGxpbmxrZXM3MmV3N2hwdG5kNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yaUG0KDAcIcWA/giphy.gif" 
+          alt="Loading animation" 
+          className="loading-gif"
+        />
+        <h2>Backend hamster warming up…. <b>{countdown} seconds</b> to showtime!</h2>
+        <p>Backend Service is not up yet</p>
+        <button onClick={() => window.location.reload()}>Retry Now</button>
+      </div>
+    );
   }
 
   return (

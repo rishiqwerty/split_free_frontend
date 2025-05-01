@@ -110,3 +110,66 @@
   font-size: 1.5rem;
   color: var(--text-primary);
 }
+
+.backend-offline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+}
+
+.branding {
+  margin-bottom: 2rem;
+}
+
+.app-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-tagline {
+  font-size: 1.2rem;
+  color: #6c757d;
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+
+.loading-gif {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 2rem;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.backend-offline h2 {
+  color: #dc3545;
+  margin-bottom: 1rem;
+}
+
+.backend-offline p {
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+.backend-offline button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.backend-offline button:hover {
+  background-color: #0056b3;
+}
