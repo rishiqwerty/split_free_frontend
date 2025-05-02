@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { AxiosResponse } from 'axios'
 import { API_URL } from '../config'
+import { auth } from '../firebase'
+import { getAuth, signOut } from 'firebase/auth'
 import './GroupPage.css'
 
 interface User {
@@ -115,9 +117,15 @@ const GroupPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const user = auth.currentUser;
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        const idToken = await user.getIdToken();
         const headers = {
-          'Authorization': `Token ${token}`,
+          'Authorization': `Bearer ${idToken}`,
         };
 
         const [membersResponse, expensesResponse] = await Promise.all([
@@ -145,7 +153,7 @@ const GroupPage: React.FC = () => {
           return acc
         }, {})
         setExpenses(expensesMap)
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again later.')
       }
@@ -159,41 +167,59 @@ const GroupPage: React.FC = () => {
     if (activeTab === 'overview') {
       setSummaryLoading(true)
       setSummaryError(null)
-      axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/summary/?simplify=${simplify}`, {
-        headers: { 'Authorization': `Token ${localStorage.getItem('authToken')}` },
-        withCredentials: true,
-      })
-      .then(res => setSummary(res.data))
-      .catch(err => setSummaryError(err.response?.data?.detail || 'Failed to load overview'))
-      .finally(() => setSummaryLoading(false))
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      user.getIdToken().then(idToken => {
+        axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/summary/?simplify=${simplify}`, {
+          headers: { 'Authorization': `Bearer ${idToken}` },
+          withCredentials: true,
+        })
+        .then(res => setSummary(res.data))
+        .catch(err => setSummaryError(err.response?.data?.detail || 'Failed to load overview'))
+        .finally(() => setSummaryLoading(false))
+      });
     }
-  }, [activeTab, groupId, simplify])
+  }, [activeTab, groupId, simplify, navigate])
 
   // Fetch activities when Tab is Activity
   useEffect(() => {
     if (activeTab === 'activity') {
       setActivitiesLoading(true)
       setActivitiesError(null)
-      axios
-        .get(`${API_URL}/api/v1/groups/${groupId}/activities/`, {
-          headers: { Authorization: `Token ${localStorage.getItem('authToken')}` },
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      user.getIdToken().then(idToken => {
+        axios.get(`${API_URL}/api/v1/groups/${groupId}/activities/`, {
+          headers: { 'Authorization': `Bearer ${idToken}` },
           withCredentials: true,
         })
         .then(res => setActivities(res.data))
         .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
         .finally(() => setActivitiesLoading(false))
+      });
     }
-  }, [activeTab, groupId])
+  }, [activeTab, groupId, navigate])
 
-  // Add this new useEffect after the existing ones
+  // Fetch AI overview
   useEffect(() => {
     const fetchAiOverview = async () => {
       try {
         setAiOverviewLoading(true)
         setAiOverviewError(null)
-        const token = localStorage.getItem('authToken')
+        const user = auth.currentUser;
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+        const idToken = await user.getIdToken();
         const headers = {
-          'Authorization': `Token ${token}`,
+          'Authorization': `Bearer ${idToken}`,
         }
 
         const response = await axios.get(`${API_URL}/api/v1/groups/${groupId}/overview/`, {
@@ -202,7 +228,7 @@ const GroupPage: React.FC = () => {
         })
 
         setAiOverview(response.data.ai_overview)
-    } catch (error) {
+      } catch (error) {
         console.error('Error fetching AI overview:', error)
         setAiOverviewError('Failed to load AI overview')
       } finally {
@@ -211,7 +237,7 @@ const GroupPage: React.FC = () => {
     }
 
     fetchAiOverview()
-  }, [groupId])
+  }, [groupId, navigate])
 
   const handleAmountChange = (amount: string) => {
     setNewExpense(prev => {
@@ -286,9 +312,14 @@ const GroupPage: React.FC = () => {
     }
 
     try {
-      const token = localStorage.getItem('authToken');
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      const idToken = await user.getIdToken();
       const headers = {
-        'Authorization': `Token ${token}`,
+        'Authorization': `Bearer ${idToken}`,
       };
 
       const splits = Object.entries(newExpense.splits).map(([userId, amount]) => ({
@@ -329,32 +360,26 @@ const GroupPage: React.FC = () => {
   }
 
   const handleLogout = async () => {
+    const auth = getAuth();
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = {
-        'Authorization': `Token ${token}`,
-      };
-
-      const response = await fetch(`${API_URL}/auth/logout/`, {
-        method: 'POST',
-        headers,
-        credentials: 'include'
-      })
-      if (response.ok) {
-        localStorage.removeItem('authToken');
-        navigate('/')
-      }
+      await signOut(auth);
+      navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error)
     }
-  }
+  };
 
   // Handler to delete an expense
   const handleDeleteExpense = async (expenseId: number) => {
     try {
-      const token = localStorage.getItem('authToken');
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      const idToken = await user.getIdToken();
       await axios.delete(`${API_URL}/api/v1/expenses/expense/delete/${expenseId}/`, {
-        headers: { 'Authorization': `Token ${token}` },
+        headers: { 'Authorization': `Bearer ${idToken}` },
         withCredentials: true,
       });
       // Remove from local state
@@ -440,8 +465,13 @@ const GroupPage: React.FC = () => {
   // Confirm settlement with edited values
   const handleConfirmSettle = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = { 'Authorization': `Token ${token}` };
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      const idToken = await user.getIdToken();
+      const headers = { 'Authorization': `Bearer ${idToken}` };
       await axios.post(
         `${API_URL}/api/v1/transactions/`,
         {

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
+import { auth } from '../firebase';
+import { getAuth, signOut } from 'firebase/auth';
 import './HomePage.css';
 
 interface Group {
@@ -31,9 +33,15 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const user = auth.currentUser;
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        const idToken = await user.getIdToken();
         const headers = {
-          'Authorization': `Token ${token}`,
+          'Authorization': `Bearer ${idToken}`,
         };
 
         const [groupsResponse, userResponse] = await Promise.all([
@@ -71,9 +79,15 @@ const HomePage: React.FC = () => {
 
   const handleCreateGroup = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const user = auth.currentUser;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      const idToken = await user.getIdToken();
       const headers = {
-        'Authorization': `Token ${token}`,
+        'Authorization': `Bearer ${idToken}`,
       };
 
       // Validate icon: must be an emoji, else use default
@@ -118,23 +132,12 @@ const HomePage: React.FC = () => {
   };
 
   const handleLogout = async () => {
+    const auth = getAuth();
     try {
-      const token = localStorage.getItem('authToken');
-      const headers = {
-        'Authorization': `Token ${token}`,
-      };
-
-      const response = await fetch(`${API_URL}/auth/logout/`, {
-        method: 'POST',
-        headers,
-        credentials: 'include'
-      });
-      if (response.ok) {
-        localStorage.removeItem('authToken');
-        navigate('/login');
-      }
+      await signOut(auth);
+      navigate('/login');
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error('Logout failed:', error)
     }
   };
 

@@ -6,7 +6,8 @@ import HomePage from './components/HomePage';
 import './App.css';
 import { API_URL } from './config';
 import JoinGroupPopup from './components/JoinGroupPopup';
-
+import { auth } from './firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -31,32 +32,17 @@ const App: React.FC = () => {
 
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          if (location.pathname !== '/login' && !location.pathname.includes('/join')) {
-            localStorage.setItem('previousUrl', location.pathname);
-            navigate('/login');
+        onAuthStateChanged(auth, (user) => {
+          if (!user) {
+            if (location.pathname !== '/login' && !location.pathname.includes('/join')) {
+              localStorage.setItem('previousUrl', location.pathname);
+              navigate('/login');
+            }
           }
           setIsLoading(false);
-          return;
-        }
-
-        // const response = await fetch(`${API_URL}/api/auth/check/`, {
-        //   credentials: 'include',
-        //   headers: {
-        //     'Authorization': `Token ${token}`,
-        //   },
-        // });
-        
-        // if (!response.ok) {
-        //   if (window.location.pathname !== '/login' && response.status === 401) {
-        //     localStorage.removeItem('authToken');
-        //     navigate('/login');
-        //   }
-        // }
+        });
       } catch (error) {
         console.error('Auth check failed:', error);
-      } finally {
         setIsLoading(false);
       }
     };

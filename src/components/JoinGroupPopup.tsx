@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_URL } from '../config';
+import { auth } from '../firebase';
 import './JoinGroupPopup.css';
 
 interface GroupDetails {
@@ -25,9 +26,9 @@ const JoinGroupPopup: React.FC = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const token = localStorage.getItem('authToken');
-        const headers = token ? {
-          'Authorization': `Token ${token}`,
+        const user = auth.currentUser;
+        const headers = user ? {
+          'Authorization': `Bearer ${await user.getIdToken()}`,
         } : {};
 
         const response = await axios.get(
@@ -48,8 +49,8 @@ const JoinGroupPopup: React.FC = () => {
   }, [uuid]);
 
   const handleJoinGroup = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
+    const user = auth.currentUser;
+    if (!user) {
       // Store the group UUID in localStorage to join after login
       localStorage.setItem('pendingGroupJoin', uuid || '');
       navigate('/login');
@@ -57,13 +58,14 @@ const JoinGroupPopup: React.FC = () => {
     }
     // If user is already a member, redirect to the group page
     if (groupDetails?.already_member) {
-        navigate(`/group/${groupDetails.id}`);
-      }
+      navigate(`/group/${groupDetails.id}`);
+    }
     try {
       setIsLoading(true);
       setError(null);
+      const idToken = await user.getIdToken();
       const headers = {
-        'Authorization': `Token ${token}`,
+        'Authorization': `Bearer ${idToken}`,
       };
 
       const response = await axios.post(
