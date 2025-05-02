@@ -4,8 +4,13 @@
 
 🌐 Live Demo: [split-free-frontend.vercel.app](https://split-free-frontend.vercel.app)  
 
-⚠️ Note:
-The initial load of the app might take around 40–50 seconds since the backend server is hosted on Render’s free tier, which can cause it to spin down when idle.
+⚠️ Note:  
+The initial load of the app might take around 60–70 seconds since the backend server is hosted on Render’s free tier, which can cause it to spin down when idle.  
+
+---
+
+## Screenshot (UI):  
+![image](https://github.com/rishiqwerty/split_free_frontend/blob/rishiqwerty-patch-1/Screenshot%202025-04-21%20at%202.06.27%E2%80%AFAM.png)
 
 ---
 
@@ -94,7 +99,18 @@ Follow these steps to set up the project locally:
 ---
 
 ## Environmental settings
-
+Create .env file at root location, fill the firebase details for auth
+```
+   VITE_FIREBASE_API_KEY=iuvsfsivus-cvvsiadkawodsadk
+   VITE_FIREBASE_AUTH_DOMAIN=splitfree-sdvsd.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=splitfree-dsvcds
+   VITE_FIREBASE_STORAGE_BUCKET=splitfree-cvdsvdd.dasv.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_FIREBASE_MEASUREMENT_ID=G-sdfdfd
+   # VITE_API_URL=https://splitfree-backend.onrender.com/admin/
+   VITE_API_URL=http://127.0.0.1:8000
+```
 
 ## Usage
 
