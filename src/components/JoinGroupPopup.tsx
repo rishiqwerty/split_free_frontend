@@ -124,14 +124,14 @@ const JoinGroupPopup: React.FC = () => {
         )}
         {error && <div className="error-message">{error}</div>}
         <div className="button-group">
-          <button 
+          <button
             className="cancel-btn"
             onClick={handleClose}
             disabled={isLoading}
           >
             Cancel
           </button>
-          <button 
+          <button
             className="join-btn"
             onClick={handleJoinGroup}
             disabled={isLoading}

@@ -82,9 +82,9 @@ const App: React.FC = () => {
           <h1 className="app-title">SplitFree</h1>
           <p className="app-tagline">Split expenses, not friendships</p>
         </div>
-        <img 
-          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGJhMWR5NXlscmZhNjJqc2RoN3I5MGxpbmxrZXM3MmV3N2hwdG5kNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yaUG0KDAcIcWA/giphy.gif" 
-          alt="Loading animation" 
+        <img
+          src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGJhMWR5NXlscmZhNjJqc2RoN3I5MGxpbmxrZXM3MmV3N2hwdG5kNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/yaUG0KDAcIcWA/giphy.gif"
+          alt="Loading animation"
           className="loading-gif"
         />
         <h2>Backend hamster warming up…. <b>{countdown} seconds</b> to showtime!</h2>
@@ -107,7 +107,7 @@ const App: React.FC = () => {
         {Array.from({ length: 9 }).map((_, index) => {
           const chars = 'SplitFree'.toUpperCase();
           const randomChar = chars[Math.floor(Math.random() * chars.length)];
-          const colors = ['var(--accent-color)','black'];
+          const colors = ['var(--accent-color)', 'black'];
           const color = colors[Math.floor(Math.random() * colors.length)];
           const top = Math.random() * 100;
           const left = Math.random() * 100;
@@ -136,7 +136,7 @@ const App: React.FC = () => {
           );
         })}
         {Array.from({ length: 10 }).map((_, i) => {
-          const emojiList = ['💰','💵','💸','💲','₹','💎','💱',];
+          const emojiList = ['💰', '💵', '💸', '💲', '₹', '💎', '💱',];
           const emoji = emojiList[Math.floor(Math.random() * emojiList.length)];
           const top = Math.random() * 100;
           const left = Math.random() * 100;

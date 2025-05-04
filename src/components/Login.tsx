@@ -14,13 +14,13 @@ const Login = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      
+
       const idToken = await user.getIdToken();
       console.log('Firebase auth successful, calling backend API...');
-      
+
       const response = await fetch(`${API_URL}/auth/google-login/`, {
         method: 'POST',
         headers: {
@@ -31,7 +31,7 @@ const Login = () => {
       });
 
       console.log('Backend API response:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('authToken', data.token);
@@ -65,8 +65,8 @@ const Login = () => {
         <h1>SplitFree</h1>
         <p className="tagline">Split expenses, stay free</p>
         {error && <div className="error-message">{error}</div>}
-        <button 
-          className="google-btn" 
+        <button
+          className="google-btn"
           onClick={handleGoogleLogin}
           disabled={isLoading}
         >

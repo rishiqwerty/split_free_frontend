@@ -29,6 +29,7 @@
 
 .group-page {
   max-width: 90vw;
+  width: 40vw;
   margin: 0 auto;
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -118,7 +119,8 @@
 }
 
 .tab {
-  flex: 1; /* Ensures equal width for each tab */
+  flex: 1;
+  /* Ensures equal width for each tab */
   padding: 12px;
   background: none;
   border: none;
@@ -158,45 +160,46 @@
 
 @media (max-width: 768px) {
   .tab {
-    font-size: 14px; /* Adjust font size for mobile */
-    padding: 8px; /* Reduce padding on smaller screens */
+    font-size: 14px;
+    /* Adjust font size for mobile */
+    padding: 8px;
+    /* Reduce padding on smaller screens */
   }
 
   .tab-container {
-    gap: 10px; /* Reduce gap on mobile */
+    gap: 10px;
+    /* Reduce gap on mobile */
   }
 }
 
 
-.expenses-list {
+.group-page-expenses-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
   max-height: calc(100vh - 200px);
   overflow-y: auto;
-  padding-right: 10px;
-  margin-right: -10px;
   position: relative;
   z-index: 1;
   height: 60vh;
   /* overflow: hidden; */
 }
 
-.expenses-list::-webkit-scrollbar {
+.group-page-expenses-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.expenses-list::-webkit-scrollbar-track {
+.group-page-expenses-list::-webkit-scrollbar-track {
   background: var(--bg-secondary);
   border-radius: 4px;
 }
 
-.expenses-list::-webkit-scrollbar-thumb {
+.group-page-expenses-list::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 4px;
 }
 
-.expenses-list::-webkit-scrollbar-thumb:hover {
+.group-page-expenses-list::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
 
@@ -719,6 +722,7 @@
   gap: 16px;
   margin-bottom: 1.5rem;
 }
+
 .summary-card {
   background: var(--bg-secondary);
   padding: 1rem;
@@ -734,6 +738,7 @@
   gap: 16px;
   margin-top: 1rem;
 }
+
 .transaction-card {
   background: var(--bg-secondary);
   padding: 1.5rem;
@@ -756,9 +761,11 @@
   margin-top: 0.5rem;
   align-self: flex-end;
 }
+
 .transaction-card .transaction-from {
   font-weight: 600;
 }
+
 .transaction-card .transaction-to {
   font-weight: 600;
 }
@@ -858,6 +865,7 @@
   margin-right: 8px;
   transition: color 0.2s ease;
 }
+
 .modal-header .delete-btn:hover {
   color: var(--accent-color);
 }
@@ -914,8 +922,11 @@
     font-size: 14px;
     padding: 8px 14px;
   }
-  .group-page{
+
+  .group-page {
     max-width: 90vw;
+    height: 95vh !important;
+    width: 99vw !important;
   }
 
   .add-expense-btn {
@@ -944,16 +955,19 @@
   .expense-details {
     display: block;
   }
+
   .expense-description {
     margin-bottom: 8px;
     white-space: normal;
   }
+
   .expense-meta {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
+
   .expense-amount,
   .expense-payer,
   .expense-date {
@@ -963,6 +977,7 @@
 
 /* Mobile-specific stacking for expense cards */
 @media (max-width: 768px) {
+
   /* Use grid layout for expense cards on mobile */
   .expense-card {
     display: grid;
@@ -976,10 +991,12 @@
     align-items: center;
     padding: 12px;
   }
+
   .expense-icon {
     grid-area: icon;
     margin: 0;
   }
+
   .expense-description {
     grid-area: desc;
     margin: 0;
@@ -987,12 +1004,14 @@
     overflow: visible;
     text-overflow: clip;
   }
+
   .expense-meta {
     grid-area: meta;
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
   }
+
   /* Remove nested flex-blocks from expense-details */
   .expense-details {
     display: contents;
@@ -1014,14 +1033,17 @@
 .activity-section::-webkit-scrollbar {
   width: 8px;
 }
+
 .activity-section::-webkit-scrollbar-track {
   background: var(--bg-secondary);
   border-radius: 4px;
 }
+
 .activity-section::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 4px;
 }
+
 .activity-section::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
 }
@@ -1054,6 +1076,7 @@
   0% {
     transform: translateX(0);
   }
+
   100% {
     transform: translateX(-600%);
   }
@@ -1069,4 +1092,3 @@
   color: var(--error-text);
   text-align: center;
 }
-

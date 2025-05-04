@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -76,18 +79,23 @@
   0% {
     transform: translate(0, 0) rotate(0deg);
   }
+
   20% {
     transform: translate(80vw, 20vh) rotate(15deg);
   }
+
   40% {
     transform: translate(-60vw, 30vh) rotate(-10deg);
   }
+
   60% {
     transform: translate(50vw, -40vh) rotate(10deg);
   }
+
   80% {
     transform: translate(-80vw, -20vh) rotate(-15deg);
   }
+
   100% {
     transform: translate(0, 0) rotate(0deg);
   }

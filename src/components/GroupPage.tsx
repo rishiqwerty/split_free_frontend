@@ -88,7 +88,7 @@ const GroupPage: React.FC = () => {
     split_between: [] as number[],
     splits: {} as { [key: number]: string },
     notes: '',
-    expense_date: new Date().toISOString().slice(0,16)
+    expense_date: new Date().toISOString().slice(0, 16)
   })
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'expenses' | 'overview' | 'activity'>('expenses')
@@ -110,7 +110,7 @@ const GroupPage: React.FC = () => {
     to_user: 0,
     amount: '',
     description: '',
-    transaction_date: new Date().toISOString().slice(0,16),
+    transaction_date: new Date().toISOString().slice(0, 16),
     maxAmount: 0
   })
 
@@ -129,13 +129,13 @@ const GroupPage: React.FC = () => {
         };
 
         const [membersResponse, expensesResponse] = await Promise.all([
-          axios.get(`${API_URL}/api/v1/groups/${groupId}/`, { 
+          axios.get(`${API_URL}/api/v1/groups/${groupId}/`, {
             headers,
-            withCredentials: true 
+            withCredentials: true
           }),
-          axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/`, { 
+          axios.get(`${API_URL}/api/v1/expenses/expenses/${groupId}/`, {
             headers,
-            withCredentials: true 
+            withCredentials: true
           })
         ])
 
@@ -177,9 +177,9 @@ const GroupPage: React.FC = () => {
           headers: { 'Authorization': `Bearer ${idToken}` },
           withCredentials: true,
         })
-        .then(res => setSummary(res.data))
-        .catch(err => setSummaryError(err.response?.data?.detail || 'Failed to load overview'))
-        .finally(() => setSummaryLoading(false))
+          .then(res => setSummary(res.data))
+          .catch(err => setSummaryError(err.response?.data?.detail || 'Failed to load overview'))
+          .finally(() => setSummaryLoading(false))
       });
     }
   }, [activeTab, groupId, simplify, navigate])
@@ -199,9 +199,9 @@ const GroupPage: React.FC = () => {
           headers: { 'Authorization': `Bearer ${idToken}` },
           withCredentials: true,
         })
-        .then(res => setActivities(res.data))
-        .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
-        .finally(() => setActivitiesLoading(false))
+          .then(res => setActivities(res.data))
+          .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
+          .finally(() => setActivitiesLoading(false))
       });
     }
   }, [activeTab, groupId, navigate])
@@ -242,7 +242,7 @@ const GroupPage: React.FC = () => {
   const handleAmountChange = (amount: string) => {
     setNewExpense(prev => {
       const newExpense = { ...prev, amount }
-      
+
       // If there are selected users, update their split amounts
       if (newExpense.split_between.length > 0) {
         const equalAmount = (parseFloat(amount) / newExpense.split_between.length).toFixed(2)
@@ -252,7 +252,7 @@ const GroupPage: React.FC = () => {
         }))
         return { ...newExpense, splits: newSplits.reduce((acc, split) => ({ ...acc, [split.user]: split.amount }), {}) }
       }
-      
+
       return newExpense
     })
   }
@@ -261,7 +261,7 @@ const GroupPage: React.FC = () => {
     setNewExpense(prev => {
       const newSplits = { ...prev.splits }
       const totalAmount = parseFloat(prev.amount)
-      
+
       // Update the changed user's amount
       if (amount === '') {
         delete newSplits[userId]
@@ -289,24 +289,24 @@ const GroupPage: React.FC = () => {
   const validateSplits = () => {
     const totalAmount = parseFloat(newExpense.amount)
     const totalSplitAmount = Object.values(newExpense.splits).reduce((sum, amount) => sum + parseFloat(amount), 0)
-    
+
     if (totalSplitAmount > totalAmount) {
       setError('Total split amount cannot exceed the expense amount')
       return false
     }
-    
+
     if (totalSplitAmount < totalAmount) {
       setError('Total split amount must equal the expense amount')
       return false
     }
-    
+
     setError(null)
     return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateSplits()) {
       return
     }
@@ -351,7 +351,7 @@ const GroupPage: React.FC = () => {
         split_between: [] as number[],
         splits: {} as { [key: number]: string },
         notes: '',
-        expense_date: new Date().toISOString().slice(0,16)
+        expense_date: new Date().toISOString().slice(0, 16)
       })
     } catch (error) {
       console.error('Error creating expense:', error)
@@ -429,7 +429,7 @@ const GroupPage: React.FC = () => {
       to_user: tran.to_user.id,
       amount: tran.amount,
       description: '',
-      transaction_date: new Date().toISOString().slice(0,16),
+      transaction_date: new Date().toISOString().slice(0, 16),
       maxAmount: parseFloat(tran.amount)
     });
     setIsSettleModalOpen(true);
@@ -456,7 +456,7 @@ const GroupPage: React.FC = () => {
       to_user: tx.to_user.id,
       amount: tx.amount,
       description: tx.expense,
-      transaction_date: new Date().toISOString().slice(0,16),
+      transaction_date: new Date().toISOString().slice(0, 16),
       maxAmount: parseFloat(tx.amount)
     });
     setIsSettleModalOpen(true);
@@ -499,7 +499,7 @@ const GroupPage: React.FC = () => {
   return (
     <div className="group-page">
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="header">
         <div className="header-top">
           <div className="brand" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
@@ -535,13 +535,13 @@ const GroupPage: React.FC = () => {
       </div>
 
       <div className="tabs">
-        <button 
+        <button
           className={`tab ${activeTab === 'expenses' ? 'active' : ''}`}
           onClick={() => setActiveTab('expenses')}
         >
           Expenses
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActiveTab('overview')}
         >
@@ -556,7 +556,7 @@ const GroupPage: React.FC = () => {
       </div>
 
       {activeTab === 'expenses' ? (
-        <div className="expenses-list">
+        <div className="group-page-expenses-list">
           {(() => {
             const expensesArray = Object.values(expenses);
             expensesArray.sort((a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime());
@@ -619,7 +619,7 @@ const GroupPage: React.FC = () => {
                         <div key={idx} className="transaction-card">
                           <span><span className="transaction-from">{tx.from_user.username}</span> to pay → <span className="transaction-to">{tx.to_user.username}</span></span>
                           <span className='transaction-amount'> ₹{tx.amount}</span>
-                          
+
                           <button className="settle-btn" onClick={() => openSettleFromTransaction(tx)}>
                             Settle
                           </button>
@@ -695,7 +695,7 @@ const GroupPage: React.FC = () => {
             split_between: [] as number[],
             splits: {} as { [key: number]: string },
             notes: '',
-            expense_date: new Date().toISOString().slice(0,16)
+            expense_date: new Date().toISOString().slice(0, 16)
           });
           setIsModalOpen(true);
         }}
@@ -757,8 +757,8 @@ const GroupPage: React.FC = () => {
                     {groupMembers.map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.username}
-                        </option>
-                      ))}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -777,16 +777,16 @@ const GroupPage: React.FC = () => {
                                 const newSplitBetween = e.target.checked
                                   ? [...newExpense.split_between, member.id]
                                   : newExpense.split_between.filter(id => id !== member.id);
-                                
+
                                 // Update splits when users are added/removed
                                 const equalAmount = (parseFloat(newExpense.amount) / (newSplitBetween.length || 1)).toFixed(2)
                                 const newSplits = newSplitBetween.map(userId => ({
                                   user: userId,
                                   amount: equalAmount
                                 }))
-                                
-                        setNewExpense({
-                          ...newExpense,
+
+                                setNewExpense({
+                                  ...newExpense,
                                   split_between: newSplitBetween,
                                   splits: newSplits.reduce((acc, split) => ({ ...acc, [split.user]: split.amount }), {})
                                 });
@@ -844,9 +844,9 @@ const GroupPage: React.FC = () => {
                     const splitsArray = expenseToEdit.splits && expenseToEdit.splits.length > 0
                       ? expenseToEdit.splits
                       : expenseToEdit.splits_detail.map(detail => {
-                          const member = groupMembers.find(m => m.username === detail.user);
-                          return { user: member?.id ?? 0, amount: detail.amount };
-                        });
+                        const member = groupMembers.find(m => m.username === detail.user);
+                        return { user: member?.id ?? 0, amount: detail.amount };
+                      });
                     setSelectedExpense(null);
                     setEditingExpenseId(expenseToEdit.id);
                     setNewExpense({
@@ -857,7 +857,7 @@ const GroupPage: React.FC = () => {
                       split_between: splitsArray.map(s => s.user),
                       splits: splitsArray.reduce((acc, s) => ({ ...acc, [s.user]: s.amount }), {}),
                       notes: expenseToEdit.notes,
-                      expense_date: expenseToEdit.created_at.slice(0,16)
+                      expense_date: expenseToEdit.created_at.slice(0, 16)
                     });
                     setIsModalOpen(true);
                   }}
@@ -912,10 +912,10 @@ const GroupPage: React.FC = () => {
                       const equalAmount = (parseFloat(selectedExpense.amount) / selectedExpense.split_between.length).toFixed(2);
                       const member = groupMembers.find(member => member.id === userId);
                       return (
-                          <div key={index} className="split-item">
-                            <span>{member ? member.username : `User ${userId}`}</span>
-                            <span>₹{equalAmount}</span>
-                          </div>
+                        <div key={index} className="split-item">
+                          <span>{member ? member.username : `User ${userId}`}</span>
+                          <span>₹{equalAmount}</span>
+                        </div>
                       );
                     })
                   )}

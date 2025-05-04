@@ -160,7 +160,7 @@ const HomePage: React.FC = () => {
 
       if (response.status === 201) {
         console.log('Group creation response:', response.data);
-        
+
         const newGroupData = {
           id: response.data.id,
           uuid: response.data.uuid,
@@ -218,7 +218,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="home-page">
       {error && <div className="error-message">{error}</div>}
-      
+
       <div className="header">
         <div className="header-top">
           <div className="brand">
@@ -241,13 +241,13 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="tabs">
-        <button 
+        <button
           className={`tab ${activeTab === 'groups' ? 'active' : ''}`}
           onClick={() => setActiveTab('groups')}
         >
           Groups
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'expenses' ? 'active' : ''}`}
           onClick={() => setActiveTab('expenses')}
         >
@@ -259,8 +259,8 @@ const HomePage: React.FC = () => {
         <div className="groups-section">
           <div className="groups-grid">
             {groups.map((group) => (
-              <div 
-                key={group.id} 
+              <div
+                key={group.id}
                 className="group-card"
                 onClick={() => handleGroupClick(group.id)}
               >
@@ -317,10 +317,10 @@ const HomePage: React.FC = () => {
               }, {} as { [key: string]: { month: string; total: number; expenses: Expense[] } })
             ).map(([month, data]) => {
               const isCollapsed = collapsedPersonMonths[month] ?? false;
-              
+
               return (
                 <div key={month} className="month-group">
-                  <div 
+                  <div
                     className="month-header"
                     onClick={() => toggleMonth(month)}
                   >
@@ -328,7 +328,7 @@ const HomePage: React.FC = () => {
                     <span className="month-total">₹{data.total.toFixed(2)}</span>
                     <span className="collapse-icon">{isCollapsed ? '+' : '-'}</span>
                   </div>
-                  
+
                   {!isCollapsed && (
                     <div className="homepage-expenses-list">
                       {data.expenses.map(expense => (
@@ -360,7 +360,7 @@ const HomePage: React.FC = () => {
       )}
 
       {activeTab === 'groups' && (
-        <button 
+        <button
           className="create-group-btn"
           onClick={() => setShowCreateGroup(true)}
         >
@@ -404,7 +404,7 @@ const HomePage: React.FC = () => {
               />
             </div>
             <div className="modal-actions" key="actions-group">
-              <button 
+              <button
                 className="cancel-btn"
                 onClick={() => {
                   setShowCreateGroup(false);
@@ -413,7 +413,7 @@ const HomePage: React.FC = () => {
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="create-btn"
                 onClick={handleCreateGroup}
                 disabled={!newGroup.name.trim()}
