@@ -57,8 +57,8 @@ const HomePage: React.FC = () => {
   });
   const [copiedGroupId, setCopiedGroupId] = useState<number | null>(null);
   const [personExpenses, setPersonExpenses] = useState<PersonExpenseSummary | null>(null);
-  const [personExpensesLoading, setPersonExpensesLoading] = useState(false);
-  const [personExpensesError, setPersonExpensesError] = useState<string | null>(null);
+  // const [personExpensesLoading, setPersonExpensesLoading] = useState(false);
+  // const [personExpensesError, setPersonExpensesError] = useState<string | null>(null);
   const [collapsedPersonMonths, setCollapsedPersonMonths] = useState<{ [key: string]: boolean }>({});
   const [activeTab, setActiveTab] = useState<'groups' | 'expenses'>('groups');
 
