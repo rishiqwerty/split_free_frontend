@@ -16,6 +16,33 @@ interface Group {
   uuid: string;
 }
 
+interface Expense {
+  id: number;
+  group: number;
+  expense_icon: string;
+  title: string;
+  amount: string;
+  paid_by: {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+  };
+  split_between: number[];
+  splits_detail: {
+    user: string;
+    amount: string;
+  }[];
+  notes: string;
+  created_at: string;
+  expense_date: string;
+}
+
+interface PersonExpenseSummary {
+  expenses: Expense[];
+  total_spent: number;
+}
+
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
@@ -29,6 +56,11 @@ const HomePage: React.FC = () => {
     group_icon: '👥'
   });
   const [copiedGroupId, setCopiedGroupId] = useState<number | null>(null);
+  const [personExpenses, setPersonExpenses] = useState<PersonExpenseSummary | null>(null);
+  const [personExpensesLoading, setPersonExpensesLoading] = useState(false);
+  const [personExpensesError, setPersonExpensesError] = useState<string | null>(null);
+  const [collapsedPersonMonths, setCollapsedPersonMonths] = useState<{ [key: string]: boolean }>({});
+  const [activeTab, setActiveTab] = useState<'groups' | 'expenses'>('groups');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,12 +76,16 @@ const HomePage: React.FC = () => {
           'Authorization': `Bearer ${idToken}`,
         };
 
-        const [groupsResponse, userResponse] = await Promise.all([
+        const [groupsResponse, userResponse, personExpensesResponse] = await Promise.all([
           axios.get(`${API_URL}/api/v1/groups/`, {
             headers,
             withCredentials: true
           }),
           axios.get(`${API_URL}/auth/get-user/`, {
+            headers,
+            withCredentials: true
+          }),
+          axios.get(`${API_URL}/api/v1/expenses/person-expenses/`, {
             headers,
             withCredentials: true
           })
@@ -62,6 +98,25 @@ const HomePage: React.FC = () => {
 
         setGroups(groupsResponse.data);
         setUserName(userResponse.data.first_name);
+        setPersonExpenses(personExpensesResponse.data);
+
+        // Set initial collapsed state for months
+        if (personExpensesResponse.data) {
+          const months = personExpensesResponse.data.expenses.reduce((acc: Set<string>, expense: Expense) => {
+            const date = new Date(expense.expense_date);
+            const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            acc.add(month);
+            return acc;
+          }, new Set<string>());
+
+          const monthArray = Array.from(months) as string[];
+          const initialCollapsedState = monthArray.reduce((acc: { [key: string]: boolean }, month: string, index: number) => {
+            acc[month] = index !== 0; // Collapse all except first month
+            return acc;
+          }, {});
+
+          setCollapsedPersonMonths(initialCollapsedState);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         setError('Failed to load data. Please try again later.');
@@ -149,6 +204,13 @@ const HomePage: React.FC = () => {
     });
   };
 
+  const toggleMonth = (month: string) => {
+    setCollapsedPersonMonths(prev => ({
+      ...prev,
+      [month]: !prev[month]
+    }));
+  };
+
   if (isLoading) {
     return <div className="loading">Loading...</div>;
   }
@@ -178,44 +240,133 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="groups-section">
-        <div className="groups-grid">
-          {groups.map((group) => (
-            <div 
-              key={group.id} 
-              className="group-card"
-              onClick={() => handleGroupClick(group.id)}
-            >
-              <div className="group-icon">{group.group_icon}</div>
-              <div className="group-details">
-                <h3 className="group-name">{group.name}</h3>
-                <p className="group-meta">
-                  <span className="members-count">{group.members.length} members</span>
-                  <span className="created-date">
-                    Created {new Date(group.created_at).toLocaleDateString()}
-                  </span>
-                </p>
-              </div>
-              <button
-                className="share-btn"
-                style={{ marginLeft: 'auto', position: 'static' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShareGroup(group.id, group.uuid);
-                }}
-              >
-                {copiedGroupId === group.id ? 'Copied' : 'Share'}
-              </button>
-            </div>
-          ))}
-        </div>
+      <div className="tabs">
+        <button 
+          className={`tab ${activeTab === 'groups' ? 'active' : ''}`}
+          onClick={() => setActiveTab('groups')}
+        >
+          Groups
+        </button>
+        <button 
+          className={`tab ${activeTab === 'expenses' ? 'active' : ''}`}
+          onClick={() => setActiveTab('expenses')}
+        >
+          Your Expenses
+        </button>
       </div>
-      <button 
-        className="create-group-btn"
-        onClick={() => setShowCreateGroup(true)}
-      >
-        Create New Group
-      </button>
+
+      {activeTab === 'groups' && (
+        <div className="groups-section">
+          <div className="groups-grid">
+            {groups.map((group) => (
+              <div 
+                key={group.id} 
+                className="group-card"
+                onClick={() => handleGroupClick(group.id)}
+              >
+                <div className="group-icon">{group.group_icon}</div>
+                <div className="group-details">
+                  <h3 className="group-name">{group.name}</h3>
+                  <p className="group-meta">
+                    <span className="members-count">{group.members.length} members</span>
+                    <span className="created-date">
+                      Created {new Date(group.created_at).toLocaleDateString()}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  className="share-btn"
+                  style={{ marginLeft: 'auto', position: 'static' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareGroup(group.id, group.uuid);
+                  }}
+                >
+                  {copiedGroupId === group.id ? 'Copied' : 'Share'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'expenses' && personExpenses && (
+        <div className="expenses-section">
+          <div className="person-summary">
+            <div className="summary-card">
+              <h3>Total Spent</h3>
+              <p className="amount">₹{personExpenses.total_spent.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div className="person-expenses-list">
+            {Object.entries(
+              personExpenses.expenses.reduce((acc, expense) => {
+                const date = new Date(expense.expense_date);
+                const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+                if (!acc[month]) {
+                  acc[month] = {
+                    month,
+                    total: 0,
+                    expenses: []
+                  };
+                }
+                acc[month].total += parseFloat(expense.amount);
+                acc[month].expenses.push(expense);
+                return acc;
+              }, {} as { [key: string]: { month: string; total: number; expenses: Expense[] } })
+            ).map(([month, data]) => {
+              const isCollapsed = collapsedPersonMonths[month] ?? false;
+              
+              return (
+                <div key={month} className="month-group">
+                  <div 
+                    className="month-header"
+                    onClick={() => toggleMonth(month)}
+                  >
+                    <h3>{data.month}</h3>
+                    <span className="month-total">₹{data.total.toFixed(2)}</span>
+                    <span className="collapse-icon">{isCollapsed ? '+' : '-'}</span>
+                  </div>
+                  
+                  {!isCollapsed && (
+                    <div className="homepage-expenses-list">
+                      {data.expenses.map(expense => (
+                        <div key={expense.id} className="expense-card">
+                          <div className="expense-icon">{expense.expense_icon}</div>
+                          <div className="expense-details">
+                            <h4>{expense.title}</h4>
+                            <p className="expense-amount">₹{expense.amount}</p>
+                            <p className="expense-date">
+                              {new Date(expense.expense_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="expense-status">
+                            {expense.paid_by.username === userName ? (
+                              <span className="status paid">Paid</span>
+                            ) : (
+                              <span className="status owed">Owed</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'groups' && (
+        <button 
+          className="create-group-btn"
+          onClick={() => setShowCreateGroup(true)}
+        >
+          Create New Group
+        </button>
+      )}
 
       {showCreateGroup && (
         <div className="create-group-modal">

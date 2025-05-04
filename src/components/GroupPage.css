@@ -28,13 +28,13 @@
 }
 
 .group-page {
-  max-width: 80vw;
+  max-width: 90vw;
   margin: 0 auto;
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  height: 95vh;
+  height: 98vh;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -913,6 +913,9 @@
   .tab {
     font-size: 14px;
     padding: 8px 14px;
+  }
+  .group-page{
+    max-width: 90vw;
   }
 
   .add-expense-btn {
