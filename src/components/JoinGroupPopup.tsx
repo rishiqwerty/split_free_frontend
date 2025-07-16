@@ -102,6 +102,15 @@ const JoinGroupPopup: React.FC = () => {
   return (
     <div className="join-group-popup">
       <div className="popup-content">
+        <div className="brand">
+          <div className="brand-logo" style={{ display: 'flex', justifyContent: 'center' }}>
+            <h1 className="brand-name" style={{ display: 'flex', alignItems: 'center' }}>
+              <img src="/splitfree_transp.svg" alt="SplitFree Logo" style={{ height: '1.5em', width: '1.5em' }} />
+              SplitFree
+            </h1>
+          </div>
+          <p className="brand-tagline">Split expenses, stay free</p>
+        </div>
         <h2>Join Group</h2>
         {groupDetails && (
           <div className="join-group-details">

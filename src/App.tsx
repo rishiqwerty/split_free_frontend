@@ -79,7 +79,11 @@ const App: React.FC = () => {
     return (
       <div className="backend-offline">
         <div className="branding">
-          <h1 className="app-title">SplitFree</h1>
+          {/* <h1 className="app-title"> */}
+          <h1 className="app-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
+            <img src="/splitfree_transp.svg" alt="SplitFree Logo" style={{ height: '2em', width: '2em' }} />
+            SplitFree
+            </h1>
           <p className="app-tagline">Split expenses, not friendships</p>
         </div>
         <img

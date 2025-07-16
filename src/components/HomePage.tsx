@@ -222,7 +222,10 @@ const HomePage: React.FC = () => {
       <div className="header">
         <div className="header-top">
           <div className="brand">
-            <h1 className="brand-name">SplitFree</h1>
+            <h1 className="brand-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
+              <img src="/splitfree_transp.svg" alt="SplitFree Logo" style={{ height: '2em', width: '2em' }} />
+              SplitFree
+            </h1>
             <p className="brand-tagline">Split expenses, stay free</p>
           </div>
           <div className="group-info">
@@ -294,7 +297,7 @@ const HomePage: React.FC = () => {
         <div className="expenses-section">
           <div className="person-summary">
             <div className="summary-card">
-              <h3>Total Spent</h3>
+              <h3>Total Spent (This Month)</h3>
               <p className="amount">₹{personExpenses.total_spent.toFixed(2)}</p>
             </div>
           </div>
