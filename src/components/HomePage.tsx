@@ -57,10 +57,13 @@ const HomePage: React.FC = () => {
   });
   const [copiedGroupId, setCopiedGroupId] = useState<number | null>(null);
   const [personExpenses, setPersonExpenses] = useState<PersonExpenseSummary | null>(null);
-  // const [personExpensesLoading, setPersonExpensesLoading] = useState(false);
-  // const [personExpensesError, setPersonExpensesError] = useState<string | null>(null);
   const [collapsedPersonMonths, setCollapsedPersonMonths] = useState<{ [key: string]: boolean }>({});
   const [activeTab, setActiveTab] = useState<'groups' | 'expenses'>('groups');
+  const [personTotalMonthExpenses, setPersonTotalMonthExpenses] = useState<any>(null);
+
+  // Minimal cursor pagination state
+  const [nextGroupsUrl, setNextGroupsUrl] = useState<string | null>(null);
+  const [nextExpensesUrl, setNextExpensesUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +79,7 @@ const HomePage: React.FC = () => {
           'Authorization': `Bearer ${idToken}`,
         };
 
-        const [groupsResponse, userResponse, personExpensesResponse] = await Promise.all([
+        const [groupsResponse, userResponse, personExpensesResponse, personTotalMonthExpenses] = await Promise.all([
           axios.get(`${API_URL}/api/v1/groups/`, {
             headers,
             withCredentials: true
@@ -88,6 +91,10 @@ const HomePage: React.FC = () => {
           axios.get(`${API_URL}/api/v1/expenses/person-expenses/`, {
             headers,
             withCredentials: true
+          }),
+          axios.get(`${API_URL}/api/v1/expenses/person-monthly-expenses/`, {
+            headers,
+            withCredentials: true
           })
         ]);
 
@@ -96,13 +103,16 @@ const HomePage: React.FC = () => {
           return;
         }
 
-        setGroups(groupsResponse.data);
+        setGroups(groupsResponse.data.results);
+        setNextGroupsUrl(groupsResponse.data.next);
         setUserName(userResponse.data.first_name);
-        setPersonExpenses(personExpensesResponse.data);
+        setPersonExpenses(personExpensesResponse.data.results);
+        setNextExpensesUrl(personExpensesResponse.data.next);
+        setPersonTotalMonthExpenses(personTotalMonthExpenses.data);
 
         // Set initial collapsed state for months
-        if (personExpensesResponse.data) {
-          const months = personExpensesResponse.data.expenses.reduce((acc: Set<string>, expense: Expense) => {
+        if (personExpensesResponse.data && personExpensesResponse.data.results) {
+          const months = personExpensesResponse.data.results.reduce((acc: Set<string>, expense: Expense) => {
             const date = new Date(expense.expense_date);
             const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
             acc.add(month);
@@ -127,6 +137,40 @@ const HomePage: React.FC = () => {
 
     fetchData();
   }, [navigate]);
+
+  // Minimal load more for groups
+  const loadMoreGroups = async () => {
+    if (!nextGroupsUrl) return;
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const idToken = await user.getIdToken();
+      const headers = { 'Authorization': `Bearer ${idToken}` };
+      const res = await axios.get(nextGroupsUrl, { headers, withCredentials: true });
+      setGroups(prev => [...prev, ...res.data.results]);
+      setNextGroupsUrl(res.data.next);
+    } catch (error) {
+      setError('Failed to load more groups.');
+    }
+  };
+
+  // Minimal load more for person expenses
+  const loadMoreExpenses = async () => {
+    if (!nextExpensesUrl) return;
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const idToken = await user.getIdToken();
+      const headers = { 'Authorization': `Bearer ${idToken}` };
+      const res = await axios.get(nextExpensesUrl, { headers, withCredentials: true });
+      setPersonExpenses(prev => prev && Array.isArray(prev)
+        ? [...prev, ...res.data.results]
+        : res.data.results);
+      setNextExpensesUrl(res.data.next);
+    } catch (error) {
+      setError('Failed to load more expenses.');
+    }
+  };
 
   const handleGroupClick = (groupId: number) => {
     navigate(`/group/${groupId}`);
@@ -265,7 +309,7 @@ const HomePage: React.FC = () => {
               <div
                 key={group.id}
                 className="group-card"
-                onClick={() => handleGroupClick(group.id)}
+                onClick={() => navigate(`/group/${group.id}`)}
               >
                 <div className="group-icon">{group.group_icon}</div>
                 <div className="group-details">
@@ -282,13 +326,22 @@ const HomePage: React.FC = () => {
                   style={{ marginLeft: 'auto', position: 'static' }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleShareGroup(group.id, group.uuid);
+                    const groupUrl = `${window.location.origin}/group/${group.uuid}/join`;
+                    navigator.clipboard.writeText(groupUrl).then(() => {
+                      setCopiedGroupId(group.id);
+                      setTimeout(() => setCopiedGroupId(null), 2000);
+                    });
                   }}
                 >
                   {copiedGroupId === group.id ? 'Copied' : 'Share'}
                 </button>
               </div>
             ))}
+            {nextGroupsUrl && (
+              <button className="load-more-btn" onClick={loadMoreGroups}>
+                Load More Groups
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -298,13 +351,18 @@ const HomePage: React.FC = () => {
           <div className="person-summary">
             <div className="summary-card">
               <h3>Total Spent (This Month)</h3>
-              <p className="amount">₹{personExpenses.total_spent.toFixed(2)}</p>
+              <p className="amount">₹{(personTotalMonthExpenses as any).total_spent?.toFixed(2) ?? ''}</p>
             </div>
           </div>
 
           <div className="person-expenses-list">
             {Object.entries(
-              personExpenses.expenses.reduce((acc, expense) => {
+              (Array.isArray(personExpenses)
+                ? personExpenses
+                : (personExpenses && (personExpenses as { expenses?: Expense[] }).expenses)
+                  ? (personExpenses as { expenses: Expense[] }).expenses
+                  : []
+              ).reduce((acc: Record<string, { month: string; total: number; expenses: Expense[] }>, expense: Expense) => {
                 const date = new Date(expense.expense_date);
                 const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
                 if (!acc[month]) {
@@ -317,24 +375,25 @@ const HomePage: React.FC = () => {
                 acc[month].total += parseFloat(expense.amount);
                 acc[month].expenses.push(expense);
                 return acc;
-              }, {} as { [key: string]: { month: string; total: number; expenses: Expense[] } })
-            ).map(([month, data]) => {
+              }, {} as Record<string, { month: string; total: number; expenses: Expense[] }>))
+            .map(([month, data], idx) => {
+              const d = data as { month: string; total: number; expenses: Expense[] };
               const isCollapsed = collapsedPersonMonths[month] ?? false;
 
               return (
                 <div key={month} className="month-group">
                   <div
                     className="month-header"
-                    onClick={() => toggleMonth(month)}
+                    onClick={() => setCollapsedPersonMonths(prev => ({ ...prev, [month]: !prev[month] }))}
                   >
-                    <h3>{data.month}</h3>
-                    <span className="month-total">₹{data.total.toFixed(2)}</span>
+                    <h3>{d.month}</h3>
+                    <span className="month-total">₹{d.total.toFixed(2)}</span>
                     <span className="collapse-icon">{isCollapsed ? '+' : '-'}</span>
                   </div>
 
                   {!isCollapsed && (
                     <div className="homepage-expenses-list">
-                      {data.expenses.map(expense => (
+                      {d.expenses.map(expense => (
                         <div key={expense.id} className="expense-card">
                           <div className="expense-icon">{expense.expense_icon}</div>
                           <div className="expense-details">
@@ -358,6 +417,11 @@ const HomePage: React.FC = () => {
                 </div>
               );
             })}
+            {nextExpensesUrl && (
+              <button className="load-more-btn" onClick={loadMoreExpenses}>
+                Load More Expenses
+              </button>
+            )}
           </div>
         </div>
       )}

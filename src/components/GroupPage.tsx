@@ -114,6 +114,9 @@ const GroupPage: React.FC = () => {
     maxAmount: 0
   })
 
+  // Minimal cursor pagination state for group expenses
+  const [nextGroupExpensesUrl, setNextGroupExpensesUrl] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,15 +147,16 @@ const GroupPage: React.FC = () => {
           return
         }
 
-        setGroupName(membersResponse.data["0"].name)
-        setGroupMembers(membersResponse.data["0"].members)
-        setUserName(membersResponse.data["0"].logged_in_user)
-        setSimplify(membersResponse.data["0"].simplify_debt)
-        const expensesMap = expensesResponse.data.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
+        setGroupName(membersResponse.data.results["0"].name)
+        setGroupMembers(membersResponse.data.results["0"].members)
+        setUserName(membersResponse.data.results["0"].logged_in_user)
+        setSimplify(membersResponse.data.results["0"].simplify_debt)
+        const expensesMap = expensesResponse.data.results.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
           acc[expense.id] = expense
           return acc
         }, {})
         setExpenses(expensesMap)
+        setNextGroupExpensesUrl(expensesResponse.data.next);
       } catch (error) {
         console.error('Error fetching data:', error)
         setError('Failed to load data. Please try again later.')
@@ -161,6 +165,25 @@ const GroupPage: React.FC = () => {
 
     fetchData()
   }, [groupId, navigate])
+
+  // Minimal load more for group expenses
+  const loadMoreGroupExpenses = async () => {
+    if (!nextGroupExpensesUrl) return;
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const idToken = await user.getIdToken();
+      const headers = { 'Authorization': `Bearer ${idToken}` };
+      const res = await axios.get(nextGroupExpensesUrl, { headers, withCredentials: true });
+      setExpenses(prev => ({ ...prev, ...res.data.results.reduce((acc: { [key: number]: Expense }, expense: Expense) => {
+        acc[expense.id] = expense
+        return acc
+      }, {}) }));
+      setNextGroupExpensesUrl(res.data.next);
+    } catch (error) {
+      // handle error
+    }
+  };
 
   // Fetch overview summary when Tab is Overview
   useEffect(() => {
@@ -199,7 +222,7 @@ const GroupPage: React.FC = () => {
           headers: { 'Authorization': `Bearer ${idToken}` },
           withCredentials: true,
         })
-          .then(res => setActivities(res.data))
+          .then(res => setActivities(res.data.results))
           .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
           .finally(() => setActivitiesLoading(false))
       });
@@ -594,6 +617,11 @@ const GroupPage: React.FC = () => {
               );
             });
           })()}
+          {nextGroupExpensesUrl && (
+            <button className="load-more-btn" onClick={loadMoreGroupExpenses}>
+              Load More Expenses
+            </button>
+          )}
         </div>
       ) : activeTab === 'overview' ? (
         <div className="overview-section">
