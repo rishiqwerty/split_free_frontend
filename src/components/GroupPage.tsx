@@ -117,6 +117,9 @@ const GroupPage: React.FC = () => {
   // Minimal cursor pagination state for group expenses
   const [nextGroupExpensesUrl, setNextGroupExpensesUrl] = useState<string | null>(null);
 
+  // Minimal cursor pagination state for group activities
+  const [nextGroupActivitiesUrl, setNextGroupActivitiesUrl] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -222,12 +225,31 @@ const GroupPage: React.FC = () => {
           headers: { 'Authorization': `Bearer ${idToken}` },
           withCredentials: true,
         })
-          .then(res => setActivities(res.data.results))
+          .then(res => {
+            setActivities(res.data.results);
+            setNextGroupActivitiesUrl(res.data.next);
+          })
           .catch(err => setActivitiesError(err.response?.data?.detail || 'Failed to load activities'))
           .finally(() => setActivitiesLoading(false))
       });
     }
   }, [activeTab, groupId, navigate])
+
+  // Minimal load more for group activities
+  const loadMoreGroupActivities = async () => {
+    if (!nextGroupActivitiesUrl) return;
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const idToken = await user.getIdToken();
+      const headers = { 'Authorization': `Bearer ${idToken}` };
+      const res = await axios.get(nextGroupActivitiesUrl, { headers, withCredentials: true });
+      setActivities(prev => [...prev, ...res.data.results]);
+      setNextGroupActivitiesUrl(res.data.next);
+    } catch (error) {
+      // handle error
+    }
+  };
 
   // Fetch AI overview
   useEffect(() => {
@@ -707,6 +729,11 @@ const GroupPage: React.FC = () => {
                   <span className="activity-timestamp">{new Date(act.timestamp).toLocaleString()}</span>
                 </div>
               ))}
+              {nextGroupActivitiesUrl && (
+                <button className="load-more-btn" onClick={loadMoreGroupActivities}>
+                  Load More Activities
+                </button>
+              )}
             </div>
           ) : (
             <p>No activities yet.</p>

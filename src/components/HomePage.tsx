@@ -240,20 +240,20 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleShareGroup = (groupId: number, groupUuid: string) => {
-    const groupUrl = `${window.location.origin}/group/${groupUuid}/join`;
-    navigator.clipboard.writeText(groupUrl).then(() => {
-      setCopiedGroupId(groupId);
-      setTimeout(() => setCopiedGroupId(null), 2000);
-    });
-  };
+  // const handleShareGroup = (groupId: number, groupUuid: string) => {
+  //   const groupUrl = `${window.location.origin}/group/${groupUuid}/join`;
+  //   navigator.clipboard.writeText(groupUrl).then(() => {
+  //     setCopiedGroupId(groupId);
+  //     setTimeout(() => setCopiedGroupId(null), 2000);
+  //   });
+  // };
 
-  const toggleMonth = (month: string) => {
-    setCollapsedPersonMonths(prev => ({
-      ...prev,
-      [month]: !prev[month]
-    }));
-  };
+  // const toggleMonth = (month: string) => {
+  //   setCollapsedPersonMonths(prev => ({
+  //     ...prev,
+  //     [month]: !prev[month]
+  //   }));
+  // };
 
   if (isLoading) {
     return <div className="loading">Loading...</div>;
