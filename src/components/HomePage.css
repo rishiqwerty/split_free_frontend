@@ -555,6 +555,10 @@ body {
   overflow: hidden;
   /* width: 35vw; */
 }
+.beta-message {
+  font-size: 10px;
+  color: var(--text-secondary)
+}
 
 .section-title {
   margin: 0 0 20px;

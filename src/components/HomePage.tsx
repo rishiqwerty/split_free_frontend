@@ -348,6 +348,7 @@ const HomePage: React.FC = () => {
 
       {activeTab === 'expenses' && personExpenses && (
         <div className="expenses-section">
+          <p className="beta-message" >*BETA: Expenses include other person expenses too</p>
           <div className="person-summary">
             <div className="summary-card">
               <h3>Total Spent (This Month)</h3>

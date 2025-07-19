@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { AxiosResponse } from 'axios'
@@ -120,6 +120,13 @@ const GroupPage: React.FC = () => {
   // Minimal cursor pagination state for group activities
   const [nextGroupActivitiesUrl, setNextGroupActivitiesUrl] = useState<string | null>(null);
 
+  const loaderExpensesRef = useRef<HTMLDivElement | null>(null);
+  const loaderActivitiesRef = useRef<HTMLDivElement | null>(null);
+
+  const [loadingMoreActivities, setLoadingMoreActivities] = useState(false);
+  // (Optional: for expenses)
+  const [loadingMoreExpenses, setLoadingMoreExpenses] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -171,7 +178,8 @@ const GroupPage: React.FC = () => {
 
   // Minimal load more for group expenses
   const loadMoreGroupExpenses = async () => {
-    if (!nextGroupExpensesUrl) return;
+    if (!nextGroupExpensesUrl || loadingMoreExpenses) return;
+    setLoadingMoreExpenses(true);
     try {
       const user = auth.currentUser;
       if (!user) return;
@@ -185,6 +193,8 @@ const GroupPage: React.FC = () => {
       setNextGroupExpensesUrl(res.data.next);
     } catch (error) {
       // handle error
+    } finally {
+      setLoadingMoreExpenses(false);
     }
   };
 
@@ -212,7 +222,8 @@ const GroupPage: React.FC = () => {
 
   // Fetch activities when Tab is Activity
   useEffect(() => {
-    if (activeTab === 'activity') {
+    // Fetch activities only if not already loaded
+    if (activeTab === 'activity' && activities.length === 0) {
       setActivitiesLoading(true)
       setActivitiesError(null)
       const user = auth.currentUser;
@@ -233,11 +244,13 @@ const GroupPage: React.FC = () => {
           .finally(() => setActivitiesLoading(false))
       });
     }
-  }, [activeTab, groupId, navigate])
+  }, [activeTab, groupId, navigate, activities.length]);
 
   // Minimal load more for group activities
   const loadMoreGroupActivities = async () => {
-    if (!nextGroupActivitiesUrl) return;
+    console.log('loadMoreGroupActivities', nextGroupActivitiesUrl, loadingMoreActivities)
+    if (!nextGroupActivitiesUrl || loadingMoreActivities) return;
+    setLoadingMoreActivities(true);
     try {
       const user = auth.currentUser;
       if (!user) return;
@@ -248,6 +261,8 @@ const GroupPage: React.FC = () => {
       setNextGroupActivitiesUrl(res.data.next);
     } catch (error) {
       // handle error
+    } finally {
+      setLoadingMoreActivities(false);
     }
   };
 
@@ -541,6 +556,38 @@ const GroupPage: React.FC = () => {
     }
   };
 
+  // Infinite scroll for group expenses with root set to scrollable div
+  useEffect(() => {
+    if (!nextGroupExpensesUrl || !loaderExpensesRef.current) return;
+    const scrollableDiv = document.querySelector('.group-page-expenses-list');
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          loadMoreGroupExpenses();
+        }
+      },
+      { threshold: 1, root: scrollableDiv }
+    );
+    observer.observe(loaderExpensesRef.current);
+    return () => observer.disconnect();
+  }, [nextGroupExpensesUrl, loaderExpensesRef.current, loadingMoreExpenses]);
+
+  // Infinite scroll for group activities with root set to scrollable div
+  useEffect(() => {
+    if (!nextGroupActivitiesUrl || !loaderActivitiesRef.current) return;
+    const scrollableDiv = document.querySelector('.activity-list');
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          loadMoreGroupActivities();
+        }
+      },
+      { threshold: 1, root: scrollableDiv }
+    );
+    observer.observe(loaderActivitiesRef.current);
+    return () => observer.disconnect();
+  }, [nextGroupActivitiesUrl, loaderActivitiesRef.current, loadingMoreActivities]);
+
   return (
     <div className="group-page">
       {error && <div className="error-message">{error}</div>}
@@ -604,7 +651,7 @@ const GroupPage: React.FC = () => {
       </div>
 
       {activeTab === 'expenses' ? (
-        <div className="group-page-expenses-list">
+        <div className="group-page-expenses-list" style={{ overflowY: 'auto' }}>
           {(() => {
             const expensesArray = Object.values(expenses);
             expensesArray.sort((a, b) => new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime());
@@ -639,10 +686,15 @@ const GroupPage: React.FC = () => {
               );
             });
           })()}
-          {nextGroupExpensesUrl && (
-            <button className="load-more-btn" onClick={loadMoreGroupExpenses}>
-              Load More Expenses
-            </button>
+          {nextGroupExpensesUrl && !loadingMoreExpenses && (
+            <div ref={loaderExpensesRef} style={{ height: 40, textAlign: 'center', padding: 8 }}>
+              Loading more...
+            </div>
+          )}
+          {loadingMoreExpenses && (
+            <div style={{ height: 40, textAlign: 'center', padding: 8 }}>
+              Loading more...
+            </div>
           )}
         </div>
       ) : activeTab === 'overview' ? (
@@ -721,7 +773,7 @@ const GroupPage: React.FC = () => {
           {activitiesLoading && <div className="loading">Loading activities...</div>}
           {activitiesError && <div className="error-message">{activitiesError}</div>}
           {activities.length > 0 ? (
-            <div className="activity-list">
+            <div className="activity-list" style={{ overflowY: 'auto' }}>
               {activities.map((act, idx) => (
                 <div key={idx} className="activity-card">
                   <p><strong className="transaction-from">{act.user.username}</strong> → {act.name}</p>
@@ -729,10 +781,15 @@ const GroupPage: React.FC = () => {
                   <span className="activity-timestamp">{new Date(act.timestamp).toLocaleString()}</span>
                 </div>
               ))}
-              {nextGroupActivitiesUrl && (
-                <button className="load-more-btn" onClick={loadMoreGroupActivities}>
-                  Load More Activities
-                </button>
+              {nextGroupActivitiesUrl && !loadingMoreActivities && (
+                <div ref={loaderActivitiesRef} style={{ height: 40, textAlign: 'center', padding: 8 }}>
+                  Loading more...
+                </div>
+              )}
+              {loadingMoreActivities && (
+                <div style={{ height: 40, textAlign: 'center', padding: 8 }}>
+                  Loading more...
+                </div>
               )}
             </div>
           ) : (
