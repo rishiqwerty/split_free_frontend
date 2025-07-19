@@ -172,9 +172,9 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const handleGroupClick = (groupId: number) => {
-    navigate(`/group/${groupId}`);
-  };
+  // const handleGroupClick = (groupId: number) => {
+  //   navigate(`/group/${groupId}`);
+  // };
 
   const handleCreateGroup = async () => {
     try {
@@ -377,7 +377,7 @@ const HomePage: React.FC = () => {
                 acc[month].expenses.push(expense);
                 return acc;
               }, {} as Record<string, { month: string; total: number; expenses: Expense[] }>))
-            .map(([month, data], idx) => {
+            .map(([month, data]) => {
               const d = data as { month: string; total: number; expenses: Expense[] };
               const isCollapsed = collapsedPersonMonths[month] ?? false;
 
